@@ -1,0 +1,18 @@
+name: Unstable Branch Protection
+
+on:
+  pull_request:
+    branches:
+      - unstable
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch
+        run: |
+          if ! [[ ${GITHUB_HEAD_REF} =~ ^feature/ ]]; 
+          then
+            echo "Error: Pull request on unstable must come from 'feature/*'"
+            exit 1
+          fi
