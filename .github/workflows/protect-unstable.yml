@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Check branch
         run: |
-          if [[ ${GITHUB_HEAD_REF} != ^feature/ ]]; 
+          if ! [[ ${GITHUB_HEAD_REF} =~ ^feature/ ]]; 
           then
             echo "Error: Pull request on unstable must come from 'feature/*'"
             exit 1
