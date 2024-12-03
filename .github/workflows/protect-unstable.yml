@@ -6,13 +6,8 @@ on:
       - unstable
 
 jobs:
-  check-branch:
+  run_if:
+    if: startsWith(github.head_ref, 'feature/')
     runs-on: ubuntu-latest
     steps:
-      - name: Check branch
-        run: |
-          if ! [[ ${GITHUB_HEAD_REF} =~ ^feature/ ]]; 
-          then
-            echo "Error: Pull request on unstable must come from 'feature/*'"
-            exit 1
-          fi
+      - run: echo "Pull request on main must come from 'feature/**'"

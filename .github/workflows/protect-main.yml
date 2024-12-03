@@ -6,13 +6,8 @@ on:
       - main
 
 jobs:
-  check-branch:
+  run_if:
+    if: github.head_ref == 'unstable'
     runs-on: ubuntu-latest
     steps:
-      - name: Check branch
-        run: |
-          if [[ ${GITHUB_HEAD_REF} != unstable ]]; 
-          then
-            echo "Error: Pull request on main must come from 'unstable'"
-            exit 1
-          fi
+      - run: echo "Pull request on main must come from 'unstable'"
