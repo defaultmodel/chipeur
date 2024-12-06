@@ -1,4 +1,4 @@
-name: Unstable Branch Protection
+name: Unstable branch protection
 
 on:
   pull_request:
