@@ -1,0 +1,32 @@
+name: cpp-linter
+
+on: pull_request
+
+jobs:
+  cpp-linter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read 
+      pull-requests: read 
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@main
+        id: linter
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tidy-checks: '' # Use .clang-tidy config file. 
+          style: file # Use .clang-format config file.
+          thread-comments: false
+          file-annotations: false
+          step-summary: true
+          tidy-review: true
+          format-review: true
+
+      - name: Fail fast
+        if: steps.linter.outputs.checks-failed != 0
+        run: |
+          echo "Some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
+        run: exit 1
