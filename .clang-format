@@ -1,0 +1,6 @@
+BasedOnStyle: Google
+PointerAlignment: Left
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+KeepEmptyLinesAtEOF: false
+KeepEmptyLinesAtTheStartOfBlocks: false
