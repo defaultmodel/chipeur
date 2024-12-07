@@ -1,10 +1,7 @@
-#include <stdio.h>
 #include "chippeur.h"
 
-void hello(void){
-    printf("Hello World\n");
-}
+#include <stdio.h>
 
-int main(void){
-    hello();
-}
+void hello(void) { printf("Hello World\n"); }
+
+int main(void) { hello(); }
