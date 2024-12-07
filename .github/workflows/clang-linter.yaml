@@ -6,10 +6,11 @@ on:
 jobs:
   cpp-linter:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read 
-      pull-requests: read 
       pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
       - uses: cpp-linter/cpp-linter-action@main
