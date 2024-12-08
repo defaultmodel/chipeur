@@ -1,4 +1,4 @@
-#include "chippeur.h"
+#include "chipeur.h"
 
 #include <stdio.h>
 #include <stdlib.h>
