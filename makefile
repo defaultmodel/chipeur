@@ -6,7 +6,7 @@ INCLUDE_DIR=include/
 OBJ_DIR=obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chippeur.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o
 
 CC=gcc
 CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -20,7 +20,7 @@ DEBUG=-DDEBUG
 
 .PHONY: all help clean
 
-all: chippeur
+all: chipeur
 
 
 # The following syntax to create object file:
@@ -28,18 +28,18 @@ all: chippeur
 #	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 # Create the object files
-$(OBJ_DIR)chippeur.o : $(SRC_DIR)chippeur.c $(INCLUDE_DIR)chippeur.h
+$(OBJ_DIR)chipeur.o : $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 
 # make the binary
-chippeur: $(OBJ_FILES)
+chipeur: $(OBJ_FILES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(LLIB)
 
 clean:
-	rm $(OBJ_DIR)* chippeur
+	rm $(OBJ_DIR)* chipeur
 
 help:
-	@echo "chippeur:\tto create the binary of the project"
+	@echo "chipeur:\tto create the binary of the project"
 	@echo "clean:\tto remove the binary and .o files"
 	@echo "help: to display this help"
