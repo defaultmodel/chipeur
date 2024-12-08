@@ -1,0 +1,13 @@
+name: Unstable Branch Protection
+
+on:
+  pull_request:
+    branches:
+      - unstable
+
+jobs:
+  run_if:
+    if: startsWith(github.head_ref, 'feature/')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Pull request on main must come from 'feature/**'"
