@@ -53,3 +53,5 @@ dkms.conf
 
 chipeur
 .vscode
+.cache
+compile_commands.json
