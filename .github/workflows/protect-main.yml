@@ -1,0 +1,13 @@
+name: Main Branch Protection
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run_if:
+    if: github.head_ref == 'unstable'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Pull request on main must come from 'unstable'"
