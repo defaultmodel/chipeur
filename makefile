@@ -8,7 +8,7 @@ OBJ_DIR=obj/
 # add the object file used here
 OBJ_FILES=$(OBJ_DIR)chipeur.o
 
-CC=gcc
+CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
 -Wpointer-arith -Wcast-qual -Wcast-align=strict -I$(INCLUDE_DIR)
 
