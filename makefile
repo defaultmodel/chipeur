@@ -6,7 +6,7 @@ INCLUDE_DIR=include/
 OBJ_DIR=obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)chromium.o
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -29,6 +29,9 @@ all: chipeur
 
 # Create the object files
 $(OBJ_DIR)chipeur.o : $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)chromium.o : $(SRC_DIR)chromium.c $(INCLUDE_DIR)chromium.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 
