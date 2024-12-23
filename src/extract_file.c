@@ -11,27 +11,21 @@ void print_file(const char* filename) {
   BOOL result;
 
   // Open the file in reading mode
-  hFile = CreateFile(filename,               // Nom du fichier
-                     GENERIC_READ,           // Accès en lecture
-                     0,                      // Mode de partage (aucun)
-                     NULL,                   // Sécurité (par défaut)
-                     OPEN_EXISTING,          //
-                     FILE_ATTRIBUTE_NORMAL,  // Attributs du fichier
-                     NULL  // Handle de fichier de modèle (aucun)
-  );
+  hFile = CreateFile(filename, GENERIC_READ, 0, NULL,\
+                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
     printf("[Error] print_file: couldn't open %s file.\n", filename);
     return;
   }
 
-  // Lire le fichier par blocs de 1024 octets
+  // reading 1024 bytes block
   do {
-    result = ReadFile(hFile,           // Handle du fichier
-                      buffer,          // Tampon de lecture
-                      sizeof(buffer),  // Taille du tampon
-                      &bytesRead,      // Nombre d'octets lus
-                      NULL             // Structure OVERLAPPED (aucune)
+    result = ReadFile(hFile,           // Handler
+                      buffer,
+                      sizeof(buffer),
+                      &bytesRead,
+                      NULL
     );
 
     if (!result || bytesRead == 0) {
