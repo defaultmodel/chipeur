@@ -1,9 +1,9 @@
+#include "chipeur.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chipeur.h"
 #include "find_ssh_key.h"
-
 
 void hello(void) { printf("Hello World\n"); }
 
