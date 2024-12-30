@@ -37,7 +37,7 @@ chipeur: $(OBJ_FILES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(LLIB)
 
 clean:
-	rm $(OBJ_DIR)* chipeur
+	rm -fv $(OBJ_DIR)* chipeur.exe chipeur
 
 help:
 	@echo "chipeur:\tto create the binary of the project"
