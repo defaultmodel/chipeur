@@ -55,8 +55,8 @@ SRC_FILES = chippeur.c
     : $(OBJ_FILES) $(CC) $(CFLAGS) $(LDFLAGS)
           $ ^ -o $ @$(LLIB)
 
-                                                     clean
-    : rm $(OBJ_DIR) * chipeur
+clean:
+	rm -fv $(OBJ_DIR)* chipeur.exe chipeur
 
                                                      help
     : @echo "chipeur:\tto create the binary of the project" @echo
