@@ -15,7 +15,7 @@ CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-derefere
 # not needed for now
 LDFLAGS= # -Wl,--strip-all
 
-LLIB= -luuid -lole32
+LLIB= -luuid -lole32 -lcrypt32
 DEBUG=-DDEBUG
 
 .PHONY: all help clean
