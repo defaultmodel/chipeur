@@ -4,8 +4,8 @@
 
 // Simple structure representing a ssh
 typedef struct sshkey {
-    char * publicKeyPath;
-    char * secretKeyPath;
+  char *publicKeyPath;
+  char *secretKeyPath;
 } sshkey;
 
 void find_ssh_key(const char *);

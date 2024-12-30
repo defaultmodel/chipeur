@@ -1,8 +1,8 @@
+#include "extract_file.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-
-#include "extract_file.h"
 
 void print_file(const char* filename) {
   HANDLE hFile;
@@ -11,8 +11,8 @@ void print_file(const char* filename) {
   BOOL result;
 
   // Open the file in reading mode
-  hFile = CreateFile(filename, GENERIC_READ, 0, NULL,\
-                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  hFile = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+                     FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
     printf("[Error] print_file: couldn't open %s file.\n", filename);
@@ -21,12 +21,8 @@ void print_file(const char* filename) {
 
   // reading 1024 bytes block
   do {
-    result = ReadFile(hFile,           // Handler
-                      buffer,
-                      sizeof(buffer),
-                      &bytesRead,
-                      NULL
-    );
+    result = ReadFile(hFile,  // Handler
+                      buffer, sizeof(buffer), &bytesRead, NULL);
 
     if (!result || bytesRead == 0) {
       break;
