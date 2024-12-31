@@ -13,36 +13,12 @@
 #include <windows.h>
 
 #include "base64.h"
+#include "path.h"
 #include "sqlite3.h"
 
 // TODO Make this a parameter so that we can support multiple chromium browsers
 #define LOGINDATA_PATH L"\\Microsoft\\Edge\\User Data\\Default\\Login Data"
 #define LOCAL_STATE_FILE L"\\Microsoft\\Edge\\User Data\\Local State"
-
-// Returns the Local AppData path gathered from environment variables
-PWSTR get_localappdata_path() {
-  PWSTR appdataPath = NULL;
-  HRESULT hr =
-      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
-  if (FAILED(hr)) {
-    fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
-    return NULL;
-  }
-  return appdataPath;
-}
-
-// Return the concatenation of `leftPath` and `rightPath`
-PWSTR concat_paths(PCWSTR leftPath, PCWSTR rightPath) {
-  size_t totalLength = wcslen(leftPath) + wcslen(rightPath) + 1;
-  PWSTR fullPath = (PWSTR)malloc(totalLength * sizeof(wchar_t));
-  if (!fullPath) {
-    fprintf(stderr, "malloc errored out");
-  }
-
-  wcscpy(fullPath, leftPath);
-  wcscat(fullPath, rightPath);
-  return fullPath;
-}
 
 // Retrieves "url login and password" from a chromium based browser sqlite
 // database
@@ -126,7 +102,8 @@ PWSTR uf8_to_utf16(PSTR multiByteString) {
     return NULL;
   }
 
-  int wideCharCount = MultiByteToWideChar(CP_ACP, 0, multiByteString, -1, NULL, 0);
+  int wideCharCount =
+      MultiByteToWideChar(CP_ACP, 0, multiByteString, -1, NULL, 0);
   if (wideCharCount == 0) {
     fprintf(stderr, "Failed to get wide character count. Error code: %lu\n",
             GetLastError());
@@ -151,8 +128,9 @@ PWSTR uf8_to_utf16(PSTR multiByteString) {
 }
 
 PSTR retrieve_encrypted_key(PWSTR localStatePath) {
-  HANDLE fileHandle = CreateFileW(localStatePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE fileHandle =
+      CreateFileW(localStatePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fileHandle == INVALID_HANDLE_VALUE) {
     printf("Failed to open file. Error code: %lu\n", GetLastError());
     return NULL;
@@ -175,7 +153,8 @@ PSTR retrieve_encrypted_key(PWSTR localStatePath) {
   }
 
   DWORD bytesRead;
-  if (!ReadFile(fileHandle, fileBuffer, fileSize * sizeof(char), &bytesRead, NULL)) {
+  if (!ReadFile(fileHandle, fileBuffer, fileSize * sizeof(char), &bytesRead,
+                NULL)) {
     printf("Failed to read file. Error code: %lu\n", GetLastError());
     free(fileBuffer);
     CloseHandle(fileHandle);
