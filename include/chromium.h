@@ -1,5 +1,5 @@
 typedef struct {
-  char *origin_url;
+  char *url;
   char *username;
   char *password;
 } LoginInfo;
