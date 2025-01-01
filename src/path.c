@@ -14,26 +14,28 @@
 // Returns the Local AppData path gathered from environment variables
 // NOTE This function uses `SHGetKnownFolderPath` thus the caller must call
 // CoTaskMemFree on the returned PWSTR
-PWSTR get_localappdata_path() {
-  PWSTR appdataPath = NULL;
+int get_localappdata_path(PWSTR* appdataPathOut) {
   HRESULT hr =
-      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
+      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, appdataPathOut);
   if (FAILED(hr)) {
     fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
-    return NULL;
+    return EXIT_FAILURE;
   }
-  return appdataPath;
+  return EXIT_SUCCESS;
 }
 
-// Returns the concatenation of `leftPath` and `rightPath`
-PWSTR concat_paths(PCWSTR leftPath, PCWSTR rightPath) {
+// Returns the concatenation of `leftPath` and `rightPath` in `fullPathOut`
+// NOTE `fullPathOut should be freed by the caller`
+int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
   size_t totalLength = wcslen(leftPath) + wcslen(rightPath) + 1;
-  PWSTR fullPath = (PWSTR)malloc(totalLength * sizeof(wchar_t));
-  if (!fullPath) {
-    fprintf(stderr, "malloc errored out");
+  *fullPathOut = (PWSTR)malloc(totalLength * sizeof(wchar_t));
+  if (!*fullPathOut) {
+    fprintf(stderr, "Failed to allocate memory for concatenated path\n");
+    return EXIT_FAILURE;
   }
 
-  wcscpy(fullPath, leftPath);
-  wcscat(fullPath, rightPath);
-  return fullPath;
+  wcscpy(*fullPathOut, leftPath);
+  wcscat(*fullPathOut, rightPath);
+
+  return EXIT_SUCCESS;
 }
