@@ -8,6 +8,6 @@
 void hello(void) { printf("Hello World\n"); }
 
 int main(void) {
-  find_ssh_key("C:\\Users");
+  find_ssh_key(L"C:\\Users");
   return EXIT_SUCCESS;
 }

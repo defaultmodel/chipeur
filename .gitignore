@@ -51,11 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-chipeur
-<<<<<<< HEAD
-.vscode/*
-=======
 .vscode
 .cache
 compile_commands.json
->>>>>>> origin/unstable

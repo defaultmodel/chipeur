@@ -1,1 +1,3 @@
-void print_file(const char *);
+#include <windows.h>
+
+void print_file(const PWSTR);
