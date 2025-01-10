@@ -12,7 +12,7 @@ void print_file(const PWSTR filename) {
 
   // Open the file in reading mode
   hFile = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                     FILE_ATTRIBUTE_NORMAL, NULL);
+                      FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
     wprintf(L"[Error] print_file: couldn't open %ls file.\n", filename);

