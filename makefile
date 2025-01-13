@@ -6,7 +6,7 @@ INCLUDE_DIR=include/
 OBJ_DIR=obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)base64.o $(OBJ_DIR)aes.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -38,9 +38,6 @@ $(OBJ_DIR)path.o : $(SRC_DIR)path.c $(INCLUDE_DIR)path.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)sqlite3.o : $(SRC_DIR)sqlite3.c $(INCLUDE_DIR)sqlite3.h
-	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)base64.o : $(SRC_DIR)base64.c $(INCLUDE_DIR)base64.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)aes.o : $(SRC_DIR)aes.c $(INCLUDE_DIR)aes.h
