@@ -15,7 +15,7 @@
 /**----------------------------------------------------------------------------
 You can use different AES algorithms by changing this macro. Default is AES-128
  -----------------------------------------------------------------------------*/
-#define AES___     128     /* or 256 (or 192; not standardized in some modes) */
+#define AES___     256     /* or 256 (or 192; not standardized in some modes) */
 
 /**----------------------------------------------------------------------------
 AES block-cipher modes of operation. The following modes can be enabled/disabled
@@ -25,44 +25,44 @@ AES block-cipher modes of operation. The following modes can be enabled/disabled
 #define AEAD_MODES   1     /* authenticated encryption with associated data.  */
 
 #if BLOCKCIPHERS
-#define ECB          1     /* electronic code-book (NIST SP 800-38A)          */
-#define CBC          1     /* cipher block chaining (NIST SP 800-38A)         */
-#define CFB          1     /* cipher feedback (NIST SP 800-38A)               */
-#define OFB          1     /* output feedback (NIST SP 800-38A)               */
+#define ECB          0     /* electronic code-book (NIST SP 800-38A)          */
+#define CBC          0     /* cipher block chaining (NIST SP 800-38A)         */
+#define CFB          0     /* cipher feedback (NIST SP 800-38A)               */
+#define OFB          0     /* output feedback (NIST SP 800-38A)               */
 #define CTR          1     /* counter-block (NIST SP 800-38A)                 */
-#define XEX          1     /* xor-encrypt-xor (NIST SP 800-38E)               */
-#define KWA          1     /* key wrap with authentication (NIST SP 800-38F)  */
-#define FPE          1     /* format-preserving encryption (NIST SP 800-38G)  */
+#define XEX          0     /* xor-encrypt-xor (NIST SP 800-38E)               */
+#define KWA          0     /* key wrap with authentication (NIST SP 800-38F)  */
+#define FPE          0     /* format-preserving encryption (NIST SP 800-38G)  */
 #endif
 
 #if AEAD_MODES
 #define CMAC         1     /* message authentication code (NIST SP 800-38B)   */
 
 #if CTR
-#define CCM          1     /* counter with CBC-MAC (RFC-3610/NIST SP 800-38C) */
+#define CCM          0     /* counter with CBC-MAC (RFC-3610/NIST SP 800-38C) */
 #define GCM          1     /* Galois/counter mode with GMAC (NIST SP 800-38D) */
-#define EAX          1     /* encrypt-authenticate-translate (ANSI C12.22)    */
-#define SIV          1     /* synthetic initialization vector (RFC-5297)      */
-#define GCM_SIV      1     /* nonce misuse-resistant AES-GCM (RFC-8452)       */
+#define EAX          0     /* encrypt-authenticate-translate (ANSI C12.22)    */
+#define SIV          0     /* synthetic initialization vector (RFC-5297)      */
+#define GCM_SIV      0     /* nonce misuse-resistant AES-GCM (RFC-8452)       */
 #endif
 
 #if XEX
-#define OCB          1     /* offset codebook mode with PMAC (RFC-7253)       */
+#define OCB          0     /* offset codebook mode with PMAC (RFC-7253)       */
 #endif
 
-#define POLY1305     1     /* poly1305-AES mac (https://cr.yp.to/mac.html)    */
+#define POLY0305     0     /* poly0305-AES mac (https://cr.yp.to/mac.html)    */
 #endif
 
 #if CBC
-#define CTS          1     /* ciphertext stealing (CS3: unconditional swap)   */
+#define CTS          0     /* ciphertext stealing (CS3: unconditional swap)   */
 #endif
 
 #if XEX
-#define XTS          1     /* XEX tweaked-codebook with ciphertext stealing   */
+#define XTS          0     /* XEX tweaked-codebook with ciphertext stealing   */
 #endif
 
 #if CTR
-#define CTR_NA       1     /* pure counter mode, with no authentication       */
+#define CTR_NA       0     /* pure counter mode, with no authentication       */
 #endif
 
 #if EAX
