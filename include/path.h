@@ -1,4 +1,5 @@
 #include <windows.h>
 
-int get_localappdata_path(PWSTR* appdataPathOut);
 int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut);
+int get_logindata_path(PWSTR* appdataPathOut);
+int get_localstate_path(PWSTR* localStatePathOut);

