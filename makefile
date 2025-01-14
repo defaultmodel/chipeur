@@ -1,45 +1,37 @@
-SRC_FILES= chippeur.c
-
-# Directories used
+SRC_FILES=chipeur.c
 SRC_DIR=src/
 INCLUDE_DIR=include/
 OBJ_DIR=obj/
 
-# add the object file used here
+# génération de Junk Code
+JUNK_CODE_INSERTER=$(SRC_DIR)junk_code_inserter
+
+# .o
 OBJ_FILES=$(OBJ_DIR)chipeur.o
 
 CC=gcc
 CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
 -Wpointer-arith -Wcast-qual -Wcast-align=strict -I$(INCLUDE_DIR)
 
-# not needed for now
-LDFLAGS= # -Wl,--strip-all
-
-LLIB=
+LDFLAGS=
 DEBUG=-DDEBUG
 
-.PHONY: all help clean
+.PHONY: all clean junk
 
-all: chipeur
+all: junk chipeur
 
+# Junk Code
+junk: $(SRC_DIR)chipeur.c $(JUNK_CODE_INSERTER)
+	$(CC) -o $(JUNK_CODE_INSERTER) $(JUNK_CODE_INSERTER).c
+	./$(JUNK_CODE_INSERTER) $(SRC_DIR)chipeur.c
 
-# The following syntax to create object file:
-# $(OBJ_DIR)file1.o : $(SRC_DIR)file1.c $(INCLUDE_DIR)hdr_used1.h ... $(INCLUDE_DIR)hdr_usedn.h
-#	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
-
-# Create the object files
-$(OBJ_DIR)chipeur.o : $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h
+# Compilation du fichier avec Junk Code
+$(OBJ_DIR)chipeur.o: $(SRC_DIR)chipeur.c
+	mkdir -p $(OBJ_DIR)
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
-
-# make the binary
 chipeur: $(OBJ_FILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(LLIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 clean:
-	rm -fv $(OBJ_DIR)* chipeur.exe chipeur
-
-help:
-	@echo "chipeur:\tto create the binary of the project"
-	@echo "clean:\tto remove the binary and .o files"
-	@echo "help: to display this help"
+	rm -rf $(OBJ_DIR) chipeur $(JUNK_CODE_INSERTER)
