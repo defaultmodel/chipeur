@@ -1,0 +1,13 @@
+    1026:	ff 25 94 2f 00 00    	jmp    *0x2f94(%rip)        # 3fc0 <_GLOBAL_OFFSET_TABLE_+0x10>
+    1030:	ff 25 92 2f 00 00    	jmp    *0x2f92(%rip)        # 3fc8 <puts@GLIBC_2.2.5>
+    103b:	e9 e0 ff ff ff       	jmp    1020 <_init+0x20>
+    1040:	ff 25 8a 2f 00 00    	jmp    *0x2f8a(%rip)        # 3fd0 <rand@GLIBC_2.2.5>
+    104b:	e9 d0 ff ff ff       	jmp    1020 <_init+0x20>
+    1050:	ff 25 a2 2f 00 00    	jmp    *0x2fa2(%rip)        # 3ff8 <__cxa_finalize@GLIBC_2.2.5>
+    10dc:	eb ef                	jmp    10cd <main+0x6d>
+    112f:	ff e0                	jmp    *%rax
+    1170:	ff e0                	jmp    *%rax
+    11c4:	e9 77 ff ff ff       	jmp    1140 <register_tm_clones>
+    11db:	e9 50 fe ff ff       	jmp    1030 <puts@plt>
+00000000000011e0 <junk_function_596>:
+0000000000001210 <junk_function_30>:
