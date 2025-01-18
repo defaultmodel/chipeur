@@ -21,8 +21,8 @@ typedef struct {
 
 int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
                           Login **loginsOut);
-int decrypt_logins(Login logins[], int loginCount, const BYTE *key,
-                   Credential *credentialsOut[], int *credentialCountOut);
+int chrmm_decrypt_logins(Login logins[], int loginCount, const BYTE *key,
+                         Credential *credentialsOut[], int *credentialCountOut);
 void free_logins(Login logins[], int count);
 void free_credentials(Credential logins[], int count);
 void printLogin(Login login);

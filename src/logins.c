@@ -12,8 +12,6 @@
 #include <windows.h>
 
 #include "aes.h"
-#include "chromium.h"
-#include "path.h"
 #include "sqlite3.h"
 
 // Taken from chromium doc:
@@ -23,10 +21,9 @@
 // "v10" is prefixed to the key
 #define ENCRYPTION_VERSION_PREFIX_LENGTH 3
 
-// Retrieves "url login and password" from a chromium based browser sqlite
-// database
-// Returns an array of `LoginInfo` of size `count` the `password` in a
-// `LoginInfo` is still encrypted at this point
+// Retrieves "url login and password" from a **chromium based browser** sqlite
+// database.
+// Returns an array of `Login` of size `loginCountOunt` the `password`
 // NOTE: Must be ran while the browser is NOT started otherwise the database is
 // locked by the browser
 // NOTE: `loginsOut` must be freed by the caller using `free_logins`
@@ -113,7 +110,7 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
 // decrypt passwords using [AES 256
 // GCM](https://source.chromium.org/chromium/chromium/src/+/main:components/os_crypt/sync/os_crypt_win.cc;l=216-235)
 // NOTE: `credentialsOut` must be freed with `free_credentials` by the caller
-int decrypt_logins(Login logins[], int loginCount, const BYTE *key,
+int chrmm_decrypt_logins(Login logins[], int loginCount, const BYTE *key,
                    Credential *credentialsOut[], int *credentialCountOut) {
   *credentialsOut = (Credential *)malloc(loginCount * sizeof(Credential));
   if (*credentialsOut == NULL) {
@@ -162,7 +159,7 @@ int decrypt_logins(Login logins[], int loginCount, const BYTE *key,
   return EXIT_SUCCESS;
 }
 
-// Frees an array of LoginInfo instance create by `chrmm_retrieve_logins`
+// Frees an array of Login instance created by `chrmm_retrieve_logins`
 void free_logins(Login logins[], int count) {
   for (int i = 0; i < count; i++) {
     free(logins[i].url);
@@ -172,13 +169,14 @@ void free_logins(Login logins[], int count) {
   free(logins);
 }
 
-void free_credentials(Credential logins[], int count) {
+// Frees an array of `Credential`
+void free_credentials(Credential credentials[], int count) {
   for (int i = 0; i < count; i++) {
-    free(logins[i].url);
-    free(logins[i].username);
-    free(logins[i].password);
+    free(credentials[i].url);
+    free(credentials[i].username);
+    free(credentials[i].password);
   }
-  free(logins);
+  free(credentials);
 }
 
 // Pretty print a `Login` struct
