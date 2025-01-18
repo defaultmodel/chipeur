@@ -26,12 +26,14 @@
 // NOTE: `loginsOut` must be freed by the caller
 static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
                            LoginInfo **loginsOut) {
+  // In case of early return
+  *loginsOut = NULL;
+  *loginCountOut = 0;
+
   sqlite3 *db;
   int rc = sqlite3_open16(fullPath, &db);
   if (rc) {
     fprintf(stderr, "Can't open database: %s", sqlite3_errmsg(db));
-    *loginsOut = NULL;
-    *loginCountOut = 0;
     return EXIT_FAILURE;
   }
 
@@ -50,12 +52,12 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
 
   int capacity = 10;   // size of the **allocated** array
   *loginCountOut = 0;  // real size (number of elements) of the array
-  *loginsOut = (LoginInfo *)malloc(capacity * sizeof(LoginInfo *));
+  *loginsOut = (LoginInfo *)malloc(capacity * sizeof(LoginInfo));
 
   if (!*loginsOut) {
     fprintf(stderr, "Failed to allocate memory for LoginInfo");
     sqlite3_finalize(statement);
-    sqlite3_close(db);
+    sqlite3_close_v2(db);
     return EXIT_FAILURE;
   }
 
@@ -64,11 +66,11 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
     if (*loginCountOut >= capacity) {
       capacity += 10;  // grow the allocated array by this much
       *loginsOut =
-          (LoginInfo *)realloc(*loginsOut, capacity * sizeof(LoginInfo *));
+          (LoginInfo *)realloc(*loginsOut, capacity * sizeof(LoginInfo));
       if (!*loginsOut) {
         fprintf(stderr, "Failed to reallocate memory for LoginInfo");
         sqlite3_finalize(statement);
-
+        sqlite3_close_v2(db);
         return EXIT_FAILURE;
       }
     }
@@ -87,8 +89,22 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
     (*loginCountOut)++;
   }
 
-  sqlite3_finalize(statement);
-  sqlite3_close(db);
+  rc = sqlite3_finalize(statement);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Failed to finalize statement: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return EXIT_FAILURE;
+  } else {
+    puts("statement finalized\n");
+  }
+
+  rc = sqlite3_close_v2(db);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Failed to close database: %s\n", sqlite3_errmsg(db));
+    return EXIT_FAILURE;
+  } else {
+    puts("database close\n");
+  }
 
   return EXIT_SUCCESS;
 }
