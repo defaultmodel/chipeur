@@ -34,38 +34,45 @@ int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
 // Returns the Login Data file path gathered from environment variables
 // NOTE: `loginDataPathOut` must be freed by the caller
 int get_logindata_path(PWSTR* loginDataPathOut) {
-    PWSTR appdataPath = NULL;
-    HRESULT hr = SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
-    if (FAILED(hr)) {
-        fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
-        return EXIT_FAILURE;
-    }
+  PWSTR appdataPath = NULL;
+  HRESULT hr =
+      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
+  if (FAILED(hr)) {
+    fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+    return EXIT_FAILURE;
+  }
 
-    if (concat_paths(appdataPath, LOGINDATA_PATH, loginDataPathOut) != EXIT_SUCCESS) {
-        CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
-        return EXIT_FAILURE;
-    }
+  if (concat_paths(appdataPath, LOGINDATA_PATH, loginDataPathOut) !=
+      EXIT_SUCCESS) {
+    CoTaskMemFree(
+        appdataPath);  // free memory from the call to SHGetKnownFolderPath
+    return EXIT_FAILURE;
+  }
 
-    CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
-    return EXIT_SUCCESS;
+  CoTaskMemFree(
+      appdataPath);  // free memory from the call to SHGetKnownFolderPath
+  return EXIT_SUCCESS;
 }
- 
+
 // Returns the Local AppData path gathered from environment variables
 // NOTE: `localStatePathOut` must be freed by the caller
 int get_localstate_path(PWSTR* localStatePathOut) {
-    PWSTR appdataPath = NULL;
-    HRESULT hr = SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
-    if (FAILED(hr)) {
-        fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
-        return EXIT_FAILURE;
-    }
+  PWSTR appdataPath = NULL;
+  HRESULT hr =
+      SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
+  if (FAILED(hr)) {
+    fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+    return EXIT_FAILURE;
+  }
 
-    if (concat_paths(appdataPath, LOCAL_STATE_FILE, localStatePathOut) != EXIT_SUCCESS) {
-        CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
-        return EXIT_FAILURE;
-    }
+  if (concat_paths(appdataPath, LOCAL_STATE_FILE, localStatePathOut) !=
+      EXIT_SUCCESS) {
+    CoTaskMemFree(
+        appdataPath);  // free memory from the call to SHGetKnownFolderPath
+    return EXIT_FAILURE;
+  }
 
-    CoTaskMemFree(appdataPath);  // free memory from the call to SHGetKnownFolderPath
-    return EXIT_SUCCESS;
+  CoTaskMemFree(
+      appdataPath);  // free memory from the call to SHGetKnownFolderPath
+  return EXIT_SUCCESS;
 }
-
