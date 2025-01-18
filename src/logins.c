@@ -36,7 +36,7 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   sqlite3 *db;
   int rc = sqlite3_open16(fullPath, &db);
   if (rc) {
-    fprintf(stderr, "Can't open database: %s", sqlite3_errmsg(db));
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     return EXIT_FAILURE;
   }
 
@@ -46,7 +46,7 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   sqlite3_stmt *statement;
   rc = sqlite3_prepare_v2(db, query, -1, &statement, 0);
   if (rc != SQLITE_OK) {
-    fprintf(stderr, "Failed to execute statement: %s", sqlite3_errmsg(db));
+    fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
     sqlite3_close(db);
     *loginsOut = NULL;
     *loginCountOut = 0;
@@ -58,7 +58,7 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   *loginsOut = (Login *)malloc(capacity * sizeof(Login));
 
   if (!*loginsOut) {
-    fprintf(stderr, "Failed to allocate memory for LoginInfo");
+    fprintf(stderr, "Failed to allocate memory for LoginInfo\n");
     sqlite3_finalize(statement);
     sqlite3_close_v2(db);
     return EXIT_FAILURE;
@@ -70,7 +70,7 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
       capacity += 10;  // grow the allocated array by this much
       *loginsOut = (Login *)realloc(*loginsOut, capacity * sizeof(Login));
       if (!*loginsOut) {
-        fprintf(stderr, "Failed to reallocate memory for LoginInfo");
+        fprintf(stderr, "Failed to reallocate memory for LoginInfo\n");
         sqlite3_finalize(statement);
         sqlite3_close_v2(db);
         return EXIT_FAILURE;

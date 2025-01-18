@@ -11,10 +11,6 @@
 /// Windows doesn't perform any kind of translation when storing or reading file
 /// names and they are stored as UTF-16. This is why we handle PWSTR's here
 
-// TODO Make this a parameter so that we can support multiple chromium browsers
-#define LOGINDATA_PATH L"\\Microsoft\\Edge\\User Data\\Default\\Login Data"
-#define LOCAL_STATE_FILE L"\\Microsoft\\Edge\\User Data\\Local State"
-
 // Returns the concatenation of `leftPath` and `rightPath` in `fullPathOut`
 // NOTE `fullPathOut should be freed by the caller`
 int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
@@ -33,7 +29,7 @@ int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
 
 // Returns the Login Data file path gathered from environment variables
 // NOTE: `loginDataPathOut` must be freed by the caller
-int get_logindata_path(PWSTR* loginDataPathOut) {
+int get_logindata_path(PCWSTR loginDataSubPath, PWSTR* loginDataPathOut){
   PWSTR appdataPath = NULL;
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
@@ -42,7 +38,7 @@ int get_logindata_path(PWSTR* loginDataPathOut) {
     return EXIT_FAILURE;
   }
 
-  if (concat_paths(appdataPath, LOGINDATA_PATH, loginDataPathOut) !=
+  if (concat_paths(appdataPath, loginDataSubPath, loginDataPathOut) !=
       EXIT_SUCCESS) {
     CoTaskMemFree(
         appdataPath);  // free memory from the call to SHGetKnownFolderPath
@@ -56,7 +52,7 @@ int get_logindata_path(PWSTR* loginDataPathOut) {
 
 // Returns the Local AppData path gathered from environment variables
 // NOTE: `localStatePathOut` must be freed by the caller
-int get_localstate_path(PWSTR* localStatePathOut) {
+int get_localstate_path(PCWSTR localStateSubPath, PWSTR* localStatePathOut){
   PWSTR appdataPath = NULL;
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
@@ -65,7 +61,7 @@ int get_localstate_path(PWSTR* localStatePathOut) {
     return EXIT_FAILURE;
   }
 
-  if (concat_paths(appdataPath, LOCAL_STATE_FILE, localStatePathOut) !=
+  if (concat_paths(appdataPath, localStateSubPath, localStatePathOut) !=
       EXIT_SUCCESS) {
     CoTaskMemFree(
         appdataPath);  // free memory from the call to SHGetKnownFolderPath
