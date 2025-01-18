@@ -17,6 +17,16 @@
 #include "path.h"
 #include "sqlite3.h"
 
+// Taken from chromium doc:
+// https://source.chromium.org/chromium/chromium/src/+/main:components/os_crypt/sync/os_crypt_win.cc;l=41-42;drc=27d34700b83f381c62e3a348de2e6dfdc08364b8
+#define NONCE_LENGTH 12
+
+// "v10"
+#define ENCRYPTION_VERSION_PREFIX_LENGTH 3
+
+// "DPAPI"
+#define DPAPI_KEY_PREFIX_LENGTH 5
+
 // Retrieves "url login and password" from a chromium based browser sqlite
 // database
 // Returns an array of `LoginInfo` of size `count` the `password` in a
@@ -291,13 +301,16 @@ static int decrypt_logins(LoginInfo *logins, int loginCount,
   }
 
   for (int i = 0; i < loginCount; i++) {
+    // cipher format: | "v10"(3) | nonce(12) | cipher(?) |
     BYTE *passwordBlock = (BYTE *)logins[i].passwordBlock;
     size_t passwordBlockSize = logins[i].passwordBlockSize;
-    BYTE *nonce = passwordBlock + 3;
-    BYTE *ciphertext = passwordBlock + 15;
-    size_t ciphertextSize = passwordBlockSize - (12 + 3);
+    BYTE *nonce = passwordBlock + ENCRYPTION_VERSION_PREFIX_LENGTH;
+    BYTE *ciphertext =
+        passwordBlock + ENCRYPTION_VERSION_PREFIX_LENGTH + NONCE_LENGTH;
+    size_t ciphertextSize =
+        passwordBlockSize - (ENCRYPTION_VERSION_PREFIX_LENGTH + NONCE_LENGTH);
 
-    BYTE *plaintext = (BYTE *)malloc(ciphertextSize - (12 + 5));
+    BYTE *plaintext = (BYTE *)malloc(ciphertextSize);
     if (plaintext == NULL) {
       fprintf(stderr, "Memory allocation failed\n");
       free(*credentialsOut);
@@ -312,6 +325,9 @@ static int decrypt_logins(LoginInfo *logins, int loginCount,
       return EXIT_FAILURE;
     }
 
+    // Don't now why but this seems to work as longs as there is no
+    // authentication tag. Chromium real calculation is done here:
+    // https://source.chromium.org/chromium/chromium/src/+/main:third_party/boringssl/src/crypto/fipsmodule/cipher/aead.cc.inc;l=192-228;drc=27d34700b83f381c62e3a348de2e6dfdc08364b8;bpv=1;bpt=1
     plaintext[ciphertextSize - (12 + 5 - 1)] = '\0';
 
     (*credentialsOut)[i].url = strdup(logins[i].url);
