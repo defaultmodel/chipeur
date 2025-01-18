@@ -129,38 +129,6 @@ void free_logins(LoginInfo *logins, int count) {
   free(logins);
 }
 
-// Should work all the time (upcasting == less problems)
-// NOTE: `wideStringOut` must be freed by the caller
-int uf8_to_utf16(PSTR multiByteString, PWSTR *wideStringOut) {
-  if (!multiByteString) {
-    return EXIT_FAILURE;
-  }
-
-  int wideCharCount =
-      MultiByteToWideChar(CP_ACP, 0, multiByteString, -1, NULL, 0);
-  if (wideCharCount == 0) {
-    fprintf(stderr, "Failed to get wide character count. Error code: %lu\n",
-            GetLastError());
-    return EXIT_FAILURE;
-  }
-
-  *wideStringOut = (PWSTR)malloc(wideCharCount * sizeof(wchar_t));
-  if (!*wideStringOut) {
-    fprintf(stderr, "Failed to allocate memory for wide string.\n");
-    return EXIT_FAILURE;
-  }
-
-  if (MultiByteToWideChar(CP_ACP, 0, multiByteString, -1, *wideStringOut,
-                          wideCharCount) == 0) {
-    fprintf(stderr, "Failed to convert ANSI to wide string. Error code: %lu\n",
-            GetLastError());
-    free(*wideStringOut);
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
-}
-
 // NOTE: `encryptedKeyOut` must be freed by the caller
 static int retrieve_encrypted_key(PWSTR localStatePath, PSTR *encryptedKeyOut) {
   HANDLE fileHandle =
