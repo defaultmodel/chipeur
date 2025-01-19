@@ -111,7 +111,8 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
 // GCM](https://source.chromium.org/chromium/chromium/src/+/main:components/os_crypt/sync/os_crypt_win.cc;l=216-235)
 // NOTE: `credentialsOut` must be freed with `free_credentials` by the caller
 int chrmm_decrypt_logins(Login logins[], int loginCount, const BYTE *key,
-                   Credential *credentialsOut[], int *credentialCountOut) {
+                         Credential *credentialsOut[],
+                         int *credentialCountOut) {
   *credentialsOut = (Credential *)malloc(loginCount * sizeof(Credential));
   if (*credentialsOut == NULL) {
     fprintf(stderr, "Memory allocation failed\n");

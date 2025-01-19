@@ -29,7 +29,7 @@ int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
 
 // Returns the Login Data file path gathered from environment variables
 // NOTE: `loginDataPathOut` must be freed by the caller
-int get_logindata_path(PCWSTR loginDataSubPath, PWSTR* loginDataPathOut){
+int get_logindata_path(PCWSTR loginDataSubPath, PWSTR* loginDataPathOut) {
   PWSTR appdataPath = NULL;
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
@@ -52,7 +52,7 @@ int get_logindata_path(PCWSTR loginDataSubPath, PWSTR* loginDataPathOut){
 
 // Returns the Local AppData path gathered from environment variables
 // NOTE: `localStatePathOut` must be freed by the caller
-int get_localstate_path(PCWSTR localStateSubPath, PWSTR* localStatePathOut){
+int get_localstate_path(PCWSTR localStateSubPath, PWSTR* localStatePathOut) {
   PWSTR appdataPath = NULL;
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
