@@ -10,8 +10,6 @@
 #include "find_ssh_key.h"
 #include "obfuscation.h"
 
-void hello(void) { printf("Hello World\n"); }
-
 int main(void) {
   // Puts the console in UTF-8
   // Allows us to print non-ASCII characters for debug
