@@ -2,7 +2,7 @@ import re
 
 def string_to_hex(s):
     # Convertir chaque caractère en sa valeur hexadécimale
-    hex_values = [f"\\x{ord(c):02x}" for c in s]
+    hex_values = [f"\\x{(ord(c) ^ 42):02x}" for c in s]
     return ''.join(hex_values)
 
 def process_line(line):

