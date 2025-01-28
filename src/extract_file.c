@@ -37,3 +37,17 @@ void print_file(const PWSTR filename) {
 
   CloseHandle(hFile);
 }
+
+BOOL is_readable(const PWSTR filename){
+  // check if the file is readable.
+
+  HANDLE hFile = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+                      FILE_ATTRIBUTE_NORMAL, NULL);
+
+  if (hFile == INVALID_HANDLE_VALUE) {
+    wprintf(L"DEBUG: is_readable: couldn't read %ls file.\n", filename);
+    return FALSE;
+  }
+  CloseHandle(hFile);
+  return TRUE;
+}

