@@ -184,6 +184,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             free(header);
             return FALSE;
         }
+        wprintf(L"DEBUG: send_ssh_keys: File '%ls' sent with success\n", keysTab[i].publicKeyPath);
         free(headTypeFname);
     }
     // Doing the same but for the secret key filename
@@ -217,6 +218,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             free(header);
             return FALSE;
         }
+        wprintf(L"DEBUG: send_ssh_keys: File '%ls' sent with success\n", keysTab[i].secretKeyPath);
         free(headTypeFname);
     }
   }

