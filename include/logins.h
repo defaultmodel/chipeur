@@ -12,7 +12,6 @@ typedef struct {
 } Login;
 
 // Decrypted `Login`
-// mostly used for debug/printing purposes
 typedef struct {
   PSTR url;
   PSTR username;
