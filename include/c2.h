@@ -1,5 +1,5 @@
-#ifndef _C2
-#define _C2
+#ifndef C2_H
+#define C2_H
 #include <windows.h>
 #include <winsock2.h>
 

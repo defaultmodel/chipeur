@@ -1,5 +1,5 @@
-#ifndef _EXTRACT_FILE
-#define _EXTRACT_FILE
+#ifndef EXTRACT_FILE_H
+#define EXTRACT_FILE_H
 #include <windows.h>
 
 void print_file(const PWSTR);

@@ -1,5 +1,5 @@
-#ifndef _FIND_SSH_KEY
-#define _FIND_SSH_KEY
+#ifndef FIND_SSH_KEY_H
+#define FIND_SSH_KEY_H
 #include <windows.h>
 
 // Max number of possible ssh keys to dump.
