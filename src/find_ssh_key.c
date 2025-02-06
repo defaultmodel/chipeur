@@ -69,7 +69,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
   // char searchPath[MAX_PATH];
   WCHAR searchPath[MAX_PATH];
   // Building search path
-  _snwprintf(searchPath, sizeof(searchPath), L"%s\\*", directory);
+  _snwprintf(searchPath, sizeof(searchPath), L"%ls\\*", directory);
 
   // Searching recursively
   hFind = FindFirstFileW(searchPath, &findData);

