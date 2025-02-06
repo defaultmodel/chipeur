@@ -11,9 +11,6 @@
 #define MAX_LOCAL_STATE_PATH_SIZE 50
 
 typedef struct {
-  //PWSTR browserName;
-  //PWSTR loginDataPath;
-  //PWSTR localStatePath;
   WCHAR browserName[MAX_BROWSER_NAME_SIZE];
   WCHAR loginDataPath[MAX_LOGIN_DATA_PATH_SIZE];
   WCHAR localStatePath[MAX_LOCAL_STATE_PATH_SIZE];
