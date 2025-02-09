@@ -7,7 +7,7 @@ on:
 
 jobs:
   run_if:
-    if: github.head_ref == 'unstable'
+    if: ${{ (github.head_ref == 'unstable') || startsWith(github.head_ref, 'hotfix/') }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Pull request on main must come from 'unstable'"
+      - run: echo "Pull request on main must come from 'unstable' or from 'hotfix/**'"
