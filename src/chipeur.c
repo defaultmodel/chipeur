@@ -15,6 +15,7 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 
+  // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
 
