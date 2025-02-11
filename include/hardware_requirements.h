@@ -1,6 +1,11 @@
 #ifndef HARDWARE_REQUIREMENTS_H
 #define HARDWARE_REQUIREMENTS_H
 
+#define EXIT_CPU_FAIL 200
+#define EXIT_RAM_FAIL 201
+#define EXIT_HDD_FAIL 202
+#define EXIT_RESOLUTION_FAIL 203
+
 int check_hardware();
 
 #endif
