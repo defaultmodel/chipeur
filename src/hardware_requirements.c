@@ -1,3 +1,5 @@
+#include "hardware_requirements.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -20,7 +22,7 @@ static int check_ram() {
   MEMORYSTATUSEX memoryStatus;
   memoryStatus.dwLength = sizeof(memoryStatus);
   if (!GlobalMemoryStatusEx(&memoryStatus)) {
-    fprintf(stderr, "Failed to get RAM status.\n");
+    fprintf(stderr, "Failed to get RAM status !!\n");
     return EXIT_FAILURE;
   }
 
@@ -39,7 +41,7 @@ static int check_hdd() {
                                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                                OPEN_EXISTING, 0, NULL);
   if (hDevice == INVALID_HANDLE_VALUE) {
-    fprintf(stderr, "Failed to open physical drive.\n");
+    fprintf(stderr, "Failed to open physical drive !!\n");
     return EXIT_FAILURE;
   }
 
@@ -49,7 +51,7 @@ static int check_hdd() {
                                 &pDiskGeometry, sizeof(pDiskGeometry),
                                 &bytesReturned, NULL);
   if (!result) {
-    fprintf(stderr, "Failed to get disk geometry.\n");
+    fprintf(stderr, "Failed to get disk geometry !!\n");
     CloseHandle(hDevice);
     return EXIT_FAILURE;
   }
@@ -70,18 +72,60 @@ static int check_hdd() {
   return EXIT_SUCCESS;
 }
 
+BOOL CALLBACK check_monitor_resolution(HMONITOR hMonitor, HDC hdcMonitor,
+                                       LPRECT lpRect, LPARAM data) {
+  MONITORINFO monitorInfo;
+  monitorInfo.cbSize = sizeof(MONITORINFO);
+  GetMonitorInfoW(hMonitor, &monitorInfo);
+
+  int xResolution = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+  int yResolution = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+  if ((xResolution != 1920 && xResolution != 2560 && xResolution != 1440) ||
+      (yResolution != 1080 && yResolution != 1200 && yResolution != 1600 &&
+       yResolution != 900)) {
+    fprintf(stderr, "Non-standard screen resolution detected !!\n");
+    *((BOOL*)data) = TRUE;  // Set the flag if resolution is not standard
+  }
+  return EXIT_SUCCESS;  // Continue enumeration
+}
+
+static int check_resolution() {
+  MONITORENUMPROC pMyCallback = (MONITORENUMPROC)check_monitor_resolution;
+  int xResolution = GetSystemMetrics(SM_CXSCREEN);
+  int yResolution = GetSystemMetrics(SM_CYSCREEN);
+
+  // Exit if the primary monitor resolution is too small
+  if (xResolution < 1000 && yResolution < 1000) {
+    return 1;
+  }
+
+  int numberOfMonitors = GetSystemMetrics(SM_CMONITORS);
+  BOOL sandbox = FALSE;
+
+  // Enumerate monitors and check resolutions
+  EnumDisplayMonitors(NULL, NULL, pMyCallback, (LPARAM)(&sandbox));
+
+  // Exit if a non-standard resolution is detected
+  if (sandbox) {
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
+}
+
 int check_hardware() {
   if (check_cpu() == EXIT_FAILURE) {
-    fprintf(stderr, "CPU check failed\n");
-    return EXIT_FAILURE;
+    return EXIT_CPU_FAIL;
   }
   if (check_ram() == EXIT_FAILURE) {
-    fprintf(stderr, "RAM check failed\n");
-    return EXIT_FAILURE;
+    return EXIT_RAM_FAIL;
   }
   if (check_hdd() == EXIT_FAILURE) {
-    fprintf(stderr, "HDD check failed\n");
-    return EXIT_FAILURE;
+    return EXIT_HDD_FAIL;
+  }
+  if (check_resolution() == EXIT_FAILURE) {
+    return EXIT_RESOLUTION_FAIL;
   }
 
   return EXIT_SUCCESS;
