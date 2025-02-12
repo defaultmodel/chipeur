@@ -12,5 +12,5 @@ typedef struct sshKey {
   PWSTR secretKeyPath;
 } sshKey;
 
-void find_ssh_key(const PWSTR, sshKey [MAX_KEY_FILES], DWORD32 *);
+void find_ssh_key(const PWSTR, sshKey[MAX_KEY_FILES], DWORD32 *);
 #endif
