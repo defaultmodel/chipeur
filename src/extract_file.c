@@ -41,11 +41,11 @@ void print_file(const PWSTR filename) {
   CloseHandle(hFile);
 }
 
-BOOL is_readable(const PWSTR filename){
+BOOL is_readable(const PWSTR filename) {
   // check if the file is readable.
 
   HANDLE hFile = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                      FILE_ATTRIBUTE_NORMAL, NULL);
+                             FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
 #ifdef DEBUG

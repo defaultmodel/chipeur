@@ -35,7 +35,6 @@ static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
 
   // Checking if the public key is readable
 
-
   // Checking if the secret key exists
   DWORD attributes = GetFileAttributesW(skNamePath);
   if (attributes == INVALID_FILE_ATTRIBUTES ||
@@ -43,7 +42,7 @@ static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
 #ifdef DEBUG
     wprintf(L"[ERROR] find_key_pair: couldn't find private key for %ls\n",
             pkNamePath);
-#endif 
+#endif
     return FALSE;
   }
 

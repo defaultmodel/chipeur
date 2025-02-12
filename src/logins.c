@@ -201,7 +201,7 @@ void free_credentials(Credential credentials[], int count) {
 // Pretty print a `Login` struct
 void printLogin(Login login) {
 #ifdef DEBUG
-  printf("URL: %s\n", login.url);  
+  printf("URL: %s\n", login.url);
   printf("Username: %s\n", login.username);
   printf("Password Block (Hex): ");
   for (int i = 0; i < login.passwordBlockSize; i++) {

