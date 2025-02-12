@@ -15,11 +15,14 @@ void print_file(const PWSTR filename) {
                       FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
+#ifdef DEBUG
     wprintf(L"[Error] print_file: couldn't open %ls file.\n", filename);
+#endif
     return;
   }
-
+#ifdef DEBUG
   wprintf(L"[Debug] print_file: Opening '%ls' file.\n", filename);
+#endif
   fflush(stdout);
   // reading 1024 bytes block
   do {
@@ -45,7 +48,9 @@ BOOL is_readable(const PWSTR filename){
                       FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
+#ifdef DEBUG
     wprintf(L"DEBUG: is_readable: couldn't read %ls file.\n", filename);
+#endif
     return FALSE;
   }
   CloseHandle(hFile);

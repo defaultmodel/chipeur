@@ -14,7 +14,9 @@ static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
                            DWORD32 *index) {
   WCHAR *skName = malloc(sizeof(WCHAR) * lenPkFile - 3);
   if (skName == NULL) {
+#ifdef DEBUG
     printf("[Error] find_key_pair: malloc for skName failed.\n");
+#endif
     return FALSE;
   }
 
@@ -38,8 +40,10 @@ static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   DWORD attributes = GetFileAttributesW(skNamePath);
   if (attributes == INVALID_FILE_ATTRIBUTES ||
       (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+#ifdef DEBUG
     wprintf(L"[ERROR] find_key_pair: couldn't find private key for %ls\n",
             pkNamePath);
+#endif 
     return FALSE;
   }
 
@@ -55,10 +59,11 @@ static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   wcsncpy(keysTab[*index].secretKeyPath, skNamePath, lenSkNamePath);
   keysTab[*index].secretKeyPath[lenSkNamePath] = L'\0';
 
+#ifdef DEBUG
   wprintf(
       L"[DEBUG] find_key_pair: Keys pair found: \nindex = %u\n\t%ls\n\t%ls\n\n",
       *index, keysTab[*index].publicKeyPath, keysTab[*index].secretKeyPath);
-
+#endif
   // incrementing the index
   (*index)++;
   return TRUE;
@@ -116,7 +121,9 @@ static BOOL find_ssh_key_recursively(const PWSTR directory,
       if (*indexKeysTab >= MAX_KEY_FILES) {
         break;
       } else if (wcscmp(fileName + (lenFileName - 4), file_extension) == 0) {
+#ifdef DEBUG
         wprintf(L"File : %ls\\%ls\n", directory, fileName);
+#endif
         find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab,
                        indexKeysTab);
       }

