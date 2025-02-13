@@ -97,7 +97,7 @@ static int check_resolution() {
 
   // Exit if the primary monitor resolution is too small
   if (xResolution < 1000 && yResolution < 1000) {
-    return 1;
+    return EXIT_FAILURE;
   }
 
   int numberOfMonitors = GetSystemMetrics(SM_CMONITORS);
