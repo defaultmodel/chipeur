@@ -20,6 +20,7 @@ int main(void) {
   // Stop if sandbox detected
   int return_code = check_hardware();
   if (return_code != EXIT_SUCCESS) {
+#ifdef DEBUG
     fprintf(stderr, "Hardware requirements check failed. Reason: ");
     switch (return_code) {
       case EXIT_CPU_FAIL: fprintf(stderr, "CPU check failed.\n"); break;
@@ -31,6 +32,7 @@ int main(void) {
       default: fprintf(stderr, "Unknown check failed.\n"); break;
     }
     fprintf(stderr, "Now exiting...");
+#endif
     return EXIT_FAILURE;
   }
 

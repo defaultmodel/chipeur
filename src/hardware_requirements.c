@@ -10,7 +10,9 @@ static int check_cpu() {
   GetSystemInfo(&systemInfo);
   DWORD numberOfProcessors = systemInfo.dwNumberOfProcessors;
   if (numberOfProcessors < 2) {
+#ifdef DEBUG
     fprintf(stderr, "Insufficient CPU cores detected !!\n");
+#endif
     return EXIT_FAILURE;
   } else {
     return EXIT_SUCCESS;
@@ -22,12 +24,16 @@ static int check_ram() {
   MEMORYSTATUSEX memoryStatus;
   memoryStatus.dwLength = sizeof(memoryStatus);
   if (!GlobalMemoryStatusEx(&memoryStatus)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to get RAM status !!\n");
+#endif
     return EXIT_FAILURE;
   }
 
   if (memoryStatus.ullTotalPhys / 1024 / 1024 < 2048) {
+#ifdef DEBUG
     fprintf(stderr, "Insufficient RAM detected !!\n");
+#endif
     return EXIT_FAILURE;
   } else {
     return EXIT_SUCCESS;
@@ -41,7 +47,9 @@ static int check_hdd() {
                                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                                OPEN_EXISTING, 0, NULL);
   if (hDevice == INVALID_HANDLE_VALUE) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to open physical drive !!\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -51,7 +59,9 @@ static int check_hdd() {
                                 &pDiskGeometry, sizeof(pDiskGeometry),
                                 &bytesReturned, NULL);
   if (!result) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to get disk geometry !!\n");
+#endif
     CloseHandle(hDevice);
     return EXIT_FAILURE;
   }
@@ -63,7 +73,9 @@ static int check_hdd() {
               (ULONG)pDiskGeometry.SectorsPerTrack *
               (ULONG)pDiskGeometry.BytesPerSector / 1024 / 1024 / 1024);
   if (diskSizeGB < 100) {
+#ifdef DEBUG
     fprintf(stderr, "Insufficient HDD capacity detected !!\n");
+#endif
     CloseHandle(hDevice);
     return EXIT_FAILURE;
   }
@@ -84,7 +96,9 @@ BOOL CALLBACK check_monitor_resolution(HMONITOR hMonitor, HDC hdcMonitor,
   if ((xResolution != 1920 && xResolution != 2560 && xResolution != 1440) ||
       (yResolution != 1080 && yResolution != 1200 && yResolution != 1600 &&
        yResolution != 900)) {
+#ifdef DEBUG
     fprintf(stderr, "Non-standard screen resolution detected !!\n");
+#endif
     *((BOOL*)data) = TRUE;  // Set the flag if resolution is not standard
   }
   return EXIT_SUCCESS;  // Continue enumeration
