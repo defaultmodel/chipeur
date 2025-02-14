@@ -3,10 +3,7 @@
 
 void generate_junk_code(FILE *output) {
     unsigned int rand_value;
-    if (RAND_bytes((unsigned char*)&rand_value, sizeof(rand_value)) != 1) {
-    rand_value = rand();  // Fallback
-    }
-    rand_value %= 5;
+    rand_value = rand() % 5;
 
     switch (rand_value) {
         case 0: {
@@ -84,8 +81,7 @@ void generate_junk_code(FILE *output) {
 
 void generate_control_flow(FILE *output) {
     unsigned int rand_value;
-    RAND_bytes((unsigned char*)&rand_value, sizeof(rand_value));
-    rand_value %= 4;
+    rand_value = rand() % 5;
 
     switch (rand_value) {
         case 0: {
@@ -136,6 +132,21 @@ void generate_control_flow(FILE *output) {
             fprintf(output, "    }\n");
             break;
         }
+        case 4: 
+            {
+                int label_id = rand() % 1000;
+                fprintf(output, "    void* jmp_table_%d[] = {&&label_%d_A, &&label_%d_B};\n", label_id, label_id, label_id);
+                fprintf(output, "    goto *jmp_table_%d[rand() %% 2];\n", label_id);
+                fprintf(output, "label_%d_A:\n", label_id);
+                fprintf(output, "    volatile int control_var_%d = rand() %% 100;\n", label_id);
+                fprintf(output, "    control_var_%d ^= (rand() %% 20);\n", label_id);
+                fprintf(output, "    goto end_%d;\n", label_id);
+                fprintf(output, "label_%d_B:\n", label_id);
+                fprintf(output, "    volatile int alt_var_%d = rand() %% 50;\n", label_id);
+                fprintf(output, "    alt_var_%d += (rand() %% 30);\n", label_id);
+                fprintf(output, "end_%d:\n", label_id);
+            }
+            break;
     }
 }
 
