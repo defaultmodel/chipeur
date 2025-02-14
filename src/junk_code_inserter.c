@@ -1,127 +1,146 @@
+// gcc -o junk_code_inserter src/junk_code_inserter.c -lcrypto 
 #include "junk_code_inserter.h"
 
-
-
-
-// Function to generate junk code snippets
 void generate_junk_code(FILE *output) {
-    int rand_value = rand() % 8; // Increased to 8 for more diversity
+    unsigned int rand_value;
+    if (RAND_bytes((unsigned char*)&rand_value, sizeof(rand_value)) != 1) {
+    rand_value = rand();  // Fallback
+    }
+    rand_value %= 5;
 
     switch (rand_value) {
-        case 0: // Unused variable
-            fprintf(output, "    // Variable used for critical error management\n");
-            fprintf(output, "    volatile int junk_var_%d = %d;\n", rand() % 1000, rand() % 1000);
-            
-            break;
-
-        case 1: // Unnecessary computation
-            fprintf(output, "    volatile int calc = (%d * %d) / (%d + 1);\n", rand() % 100, rand() % 50, rand() % 10 + 1);
-            fprintf(output, "    // Intermediate calculation for performance optimization\n");
-            break;
-
-        case 2: // Useless loop
-            fprintf(output, "    // Iterating through a series of critical operations\n");
-            fprintf(output, "    for (int i = 0; i < %d; i++) {\n", rand() % 10 + 1);
-            fprintf(output, "        volatile int temp = i * i + %d;\n", rand() % 50);
+        case 0: {
+            int var_id = rand() % 1000;
+            fprintf(output, "    volatile int random_val_%d = rand() %% 256;\n", var_id);
+            fprintf(output, "    for (int i = 0; i < 3 + (rand() %% 3); i++) {\n");
+            fprintf(output, "        random_val_%d ^= (random_val_%d + i) & (rand() %% 100);\n", var_id, var_id);
             fprintf(output, "    }\n");
-            break;
-
-        case 3: // Unnecessary condition
-            fprintf(output, "    // Critical condition to adjust dynamic parameters\n");
-            fprintf(output, "    if (rand() %% 4 == 0) {\n");
-            fprintf(output, "        volatile int temp = %d;\n", rand() % 100);
+            fprintf(output, "    if ((random_val_%d & (1 << (rand() %% 8))) != 0) {\n", var_id);
+            fprintf(output, "        random_val_%d |= (rand() %% 0xFF);\n", var_id);
             fprintf(output, "    } else {\n");
-            fprintf(output, "        volatile int temp = %d;\n", rand() % 200);
+            fprintf(output, "        random_val_%d &= ~(rand() %% 0x7F);\n", var_id);
             fprintf(output, "    }\n");
             break;
+        }
 
-        case 4: // Useless array
-            fprintf(output, "    volatile int junk_array_%d[5] = {", rand() % 1000);
-            for (int i = 0; i < 5; i++) {
-                fprintf(output, "%d, ", rand() % 100);
-            }
-            fprintf(output, "};\n");
-            fprintf(output, "    // Static configuration data\n");
+        case 1: {
+            int array_id = rand() % 1000;
+            int array_size = 2 + (rand() % 3);
+            fprintf(output, "    volatile int* mem_block_%d = (int*)malloc(sizeof(int) * %d);\n", 
+                    array_id, array_size);
+            fprintf(output, "    if (mem_block_%d) {\n", array_id);
+            fprintf(output, "        for (int i = 0; i < %d; i++) {\n", array_size);
+            fprintf(output, "            mem_block_%d[i] = (i * rand()) ^ (rand() %% 0xFFFF);\n", array_id);
+            fprintf(output, "        }\n");
+            fprintf(output, "        mem_block_%d[rand() %% %d] ^= (rand() %% 0xFF);\n", array_id, array_size);
+            fprintf(output, "        free((void*)mem_block_%d);\n", array_id);
+            fprintf(output, "    }\n");
             break;
+        }
 
-        case 5: // Unnecessary pointers
-            fprintf(output, "    // Critical pointer manipulation for memory access security\n");
-            fprintf(output, "    volatile int *junk_ptr = NULL;\n");
-            fprintf(output, "    int junk_value = %d;\n", rand() % 100);
-            fprintf(output, "    junk_ptr = &junk_value;\n");
-            fprintf(output, "    volatile int deref = *junk_ptr;\n");
+        case 2: {
+            int ptr_id = rand() % 1000;
+            fprintf(output, "    volatile int* heap_var_%d = (int*)malloc(sizeof(int) * 3);\n", ptr_id);
+            fprintf(output, "    if (heap_var_%d) {\n", ptr_id);
+            fprintf(output, "        for (int i = 0; i < 3; i++) {\n");
+            fprintf(output, "            heap_var_%d[i] = (rand() << 16) | rand();\n", ptr_id);
+            fprintf(output, "        }\n");
+            fprintf(output, "        heap_var_%d[1] ^= heap_var_%d[2] * heap_var_%d[0];\n", 
+                    ptr_id, ptr_id, ptr_id);
+            fprintf(output, "        free((void*)heap_var_%d);\n", ptr_id);
+            fprintf(output, "    }\n");
             break;
+        }
 
-        case 6: // Useless structure
-            fprintf(output, "    // Structure used for critical data serialization\n");
-            fprintf(output, "    struct JunkStruct {\n");
-            fprintf(output, "        int field_a;\n");
-            fprintf(output, "        float field_b;\n");
-            fprintf(output, "    } junk_struct;\n");
-            fprintf(output, "    junk_struct.field_a = %d;\n", rand() % 100);
-            fprintf(output, "    junk_struct.field_b = %.2f;\n", (rand() % 1000) / 100.0);
+        case 3: {
+            int logic_id = rand() % 1000;
+            fprintf(output, "    volatile int control_flow_%d = rand() ^ (rand() << 16);\n", logic_id);
+            fprintf(output, "    for (int i = (control_flow_%d & 0x3); i > 0; i--) {\n", logic_id);
+            fprintf(output, "        control_flow_%d ^= (i * control_flow_%d) | (rand() %% 0xFFFF);\n", 
+                    logic_id, logic_id);
+            fprintf(output, "    }\n");
+            fprintf(output, "    if ((control_flow_%d & 0x80000000)) {\n", logic_id);
+            fprintf(output, "        control_flow_%d += rand();\n", logic_id);
+            fprintf(output, "    } else {\n");
+            fprintf(output, "        control_flow_%d -= (rand() %% 0x3FF);\n", logic_id);
+            fprintf(output, "    }\n");
             break;
+        }
 
-        case 7: // Call to an unused function
-            fprintf(output, "    // Call to a critical function for validation\n");
-            fprintf(output, "    junk_function_%d();\n", rand() % 1000);
+        case 4: {
+            int loop_id = rand() % 1000;
+            fprintf(output, "    volatile int seed_%d = (rand() << 16) | rand();\n", loop_id);
+            fprintf(output, "    volatile int modifier_%d = rand() %% 100 + 1;\n", loop_id);
+            fprintf(output, "    for (int i = (seed_%d & 0x3); i < (4 + (modifier_%d & 0x1)); i++) {\n", loop_id, loop_id);
+            fprintf(output, "        seed_%d = ((seed_%d * 0x5DEECE66DULL + 0xB) ^ (rand() << 16)) + modifier_%d;\n", 
+                    loop_id, loop_id, loop_id);
+            fprintf(output, "        if ((seed_%d & 0xF) == 0) break;\n", loop_id); 
+            fprintf(output, "    }\n");
             break;
+        }
+
     }
 }
 
-// Function to generate control flow obfuscations
 void generate_control_flow(FILE *output) {
-    int rand_value = rand() % 5; // Increased to 5 for more diversity
+    unsigned int rand_value;
+    RAND_bytes((unsigned char*)&rand_value, sizeof(rand_value));
+    rand_value %= 4;
 
     switch (rand_value) {
-        case 0: // Fake switch
-            fprintf(output, "    // Managing critical cases in branch distribution\n");
-            fprintf(output, "    switch (rand() %% 3) {\n");
-            fprintf(output, "        case 0: break;\n");
-            fprintf(output, "        case 1: break;\n");
-            fprintf(output, "        case 2: break;\n");
-            fprintf(output, "    }\n");
-            break;
-
-        case 1: // Simple condition
-            fprintf(output, "    // Validating dynamic states\n");
-            fprintf(output, "    if (rand() %% 2 == 0) {\n");
-            fprintf(output, "        volatile int temp = 42;\n");
+        case 0: {
+            int var_id = rand() % 1000;
+            fprintf(output, "    volatile int control_state_%d = rand() ^ (rand() << 16);\n", var_id);
+            fprintf(output, "    if ((control_state_%d & 0x8000) == 0) {\n", var_id);
+            fprintf(output, "        control_state_%d ^= (rand() << 8) | 0xFF00FF;\n", var_id);
             fprintf(output, "    } else {\n");
-            fprintf(output, "        volatile int temp = 84;\n");
+            fprintf(output, "        control_state_%d |= (rand() %% 0xFFFF);\n", var_id);
             fprintf(output, "    }\n");
             break;
+        }
 
-        case 2: // Fake path
-            fprintf(output, "    // Critical path for random values\n");
-            fprintf(output, "    if (rand() %% 3 == 0) {\n");
-            fprintf(output, "        volatile int temp = rand();\n");
+        case 1: {
+            int buffer_id = rand() % 1000;
+            fprintf(output, "    volatile int buffer_control_%d[3];\n", buffer_id);
+            fprintf(output, "    for (int i = 0; i < 3; i++) {\n");
+            fprintf(output, "        buffer_control_%d[i] = (rand() << 24) | (rand() << 8);\n", buffer_id);
+            fprintf(output, "    }\n");
+            fprintf(output, "    if ((buffer_control_%d[0] ^ buffer_control_%d[1]) > buffer_control_%d[2]) {\n", 
+                    buffer_id, buffer_id, buffer_id);
+            fprintf(output, "        buffer_control_%d[1] ^= buffer_control_%d[2];\n", buffer_id, buffer_id);
             fprintf(output, "    }\n");
             break;
+        }
 
-        case 3: // Nested condition
-            fprintf(output, "    // Double validation for enhanced security\n");
-            fprintf(output, "    if (rand() %% 2 == 0) {\n");
-            fprintf(output, "        if (rand() %% 2 == 0) {\n");
-            fprintf(output, "            volatile int temp = 42;\n");
-            fprintf(output, "        }\n");
+        case 2: {
+            int branch_id = rand() % 1000;
+            fprintf(output, "    volatile int decision_%d = rand() %% 0x7FFF;\n", branch_id);
+            fprintf(output, "    volatile int bitmask_%d = (rand() << 16) | rand();\n", branch_id);
+
+            fprintf(output, "    if (decision_%d > (0x7FFF * 3 / 4)) {\n", branch_id);
+            fprintf(output, "        decision_%d ^= (bitmask_%d & 0x3F3F3F3F);\n", branch_id, branch_id);
+            fprintf(output, "    } else {\n");
+            fprintf(output, "        decision_%d &= ~(0xF0F0F0F);\n", branch_id);
             fprintf(output, "    }\n");
             break;
+        }
 
-        case 4: // Fake label with goto
-        {
-        int label_id = rand() % 1000; // Generate a single label ID
-        fprintf(output, "    // Managing critical jumps\n");
-        fprintf(output, "    goto label_%d;\n", label_id);
-        fprintf(output, "label_%d:\n", label_id);
-        break;
+        case 3: {
+            int rand_id = rand() % 1000;
+            fprintf(output, "    /* Opaque predicate */\n");
+            fprintf(output, "    int key_%d = rand() %% 255;\n", rand_id);
+            fprintf(output, "    int predicate_%d = ((key_%d * 0x6B8B4567) & 0x42) != 0;\n", rand_id, rand_id);
+            fprintf(output, "    if (predicate_%d) {\n", rand_id);
+            fprintf(output, "        volatile int opaque_%d = rand();\n", rand_id);
+            fprintf(output, "        opaque_%d ^= (opaque_%d << 16);\n", rand_id, rand_id);
+            fprintf(output, "    }\n");
+            break;
         }
     }
 }
 
-// Function to insert junk code and control flow obfuscations into the target file
 void insert_obfuscation(const char *file_path) {
-    char temp_file[] = "chipeur_tmp.c";
+    char temp_file[] = "obfuscated_temp.c";
     FILE *input = fopen(file_path, "r");
     FILE *output = fopen(temp_file, "w");
 
@@ -133,31 +152,40 @@ void insert_obfuscation(const char *file_path) {
     char line[MAX_LINE_LENGTH];
     int inside_function = 0;
     int obfuscations_in_function = 0;
-    int has_returned = 0; // Indicates if a `return` statement has been encountered
+    int inside_struct = 0;
 
-    srand(time(NULL));
+    unsigned int seed;
+    RAND_bytes((unsigned char*)&seed, sizeof(seed));
+    srand(seed);
 
     while (fgets(line, sizeof(line), input)) {
-        // Copy the original line
-        fprintf(output, "%s", line);
-
-        // Detect if entering or exiting a function
-        if (strstr(line, "{")) {
-            inside_function = 1;
-            obfuscations_in_function = 0; // Reset for each function
-            has_returned = 0; // Reset for each function
+        if (strstr(line, "struct ") || strstr(line, "typedef struct")) {
+            inside_struct = 1;
         }
-        if (strstr(line, "}")) {
+        if (strstr(line, "};") && inside_struct) {
+            inside_struct = 0;
+        }
+
+        if (strstr(line, "{") && !inside_struct) {
+            inside_function = 1;
+            obfuscations_in_function = 0;
+        }
+        if (strstr(line, "}") && !inside_struct) {
             inside_function = 0;
         }
 
-        // Check if a `return` statement is present
-        if (inside_function && strstr(line, "return")) {
-            has_returned = 1;
+        if (inside_function && strstr(line, "return") && obfuscations_in_function < MAX_OBFUSCATIONS_PER_FUNCTION) {
+            if (rand() % 100 < JUNK_CODE_PROBABILITY) {
+                generate_junk_code(output);
+                obfuscations_in_function++;
+            }
         }
 
-        // Add obfuscations within existing functions
-        if (inside_function && !has_returned && strstr(line, ";") && obfuscations_in_function < MAX_OBFUSCATIONS_PER_FUNCTION) {
+        fputs(line, output);
+
+        if (inside_function && strstr(line, ";") && !strstr(line, "return") && 
+            obfuscations_in_function < MAX_OBFUSCATIONS_PER_FUNCTION) {
+            
             if (rand() % 100 < JUNK_CODE_PROBABILITY) {
                 generate_junk_code(output);
                 obfuscations_in_function++;
@@ -166,27 +194,21 @@ void insert_obfuscation(const char *file_path) {
                 generate_control_flow(output);
                 obfuscations_in_function++;
             }
-        }
-
-        // Add unused functions between function definitions
-        if (!inside_function && strstr(line, "}") && rand() % 100 < JUNK_CODE_PROBABILITY) {
-            fprintf(output, "void junk_function_%d() {\n", rand() % 1000);
-            fprintf(output, "    volatile int temp = rand();\n");
-            fprintf(output, "    temp += %d;\n", rand() % 100);
-            fprintf(output, "    temp *= %d;\n", rand() % 50);
-            fprintf(output, "}\n\n");
+            if (rand() % 100 < OPAQUE_PREDICATE_PROBABILITY) {
+                generate_control_flow(output);
+                obfuscations_in_function++;
+            }
         }
     }
 
     fclose(input);
     fclose(output);
 
-    // Replace the original file with the obfuscated one
     if (rename(temp_file, file_path) != 0) {
         perror("Error replacing source file");
         exit(EXIT_FAILURE);
     }
-    printf("Obfuscation added to: %s\n", file_path);
+    printf("Obfuscation successful for: %s\n", file_path);
 }
 
 int main(int argc, char *argv[]) {
