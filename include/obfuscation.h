@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <windows.h>
 
 #define XOR_STR(str, size)             \
   do {                                 \
@@ -13,3 +14,10 @@
       (wstr)[i] ^= 42;                 \
     }                                  \
   } while (0)
+
+typedef PVOID(WINAPI *PCheckRemoteDebuggerPresent)(HANDLE hProcess, PBOOL  pbDebuggerPresent);
+typedef struct {
+  PCheckRemoteDebuggerPresent funcCheckRemoteDebuggerPresent;
+} hidden_apis;
+
+void resolve_apis(hidden_apis apis);

