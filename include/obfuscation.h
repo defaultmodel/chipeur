@@ -15,9 +15,8 @@
     }                                  \
   } while (0)
 
-typedef PVOID(WINAPI *PCheckRemoteDebuggerPresent)(HANDLE hProcess, PBOOL  pbDebuggerPresent);
+typedef BOOL(WINAPI *PCheckRemoteDebuggerPresent)(HANDLE hProcess, PBOOL pbDebuggerPresent);
 typedef struct {
   PCheckRemoteDebuggerPresent funcCheckRemoteDebuggerPresent;
 } hidden_apis;
-
-void resolve_apis(hidden_apis apis);
+void resolve_apis(hidden_apis *apis);

