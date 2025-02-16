@@ -1,5 +1,6 @@
 #include "obfuscation.h"
 
+#include <libloaderapi.h>
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
@@ -33,11 +34,24 @@ void resolve_apis(hidden_apis *apis) {
 
   HMODULE hKernel32 = GetModuleHandleW(kernel_str);
 
+  // Resolve strings
   char checkRemoteDbg_str[] =
       "\x69\x42\x4f\x49\x41\x78\x4f\x47\x45\x5e\x4f\x6e\x4f\x48\x5f\x4d\x4d\x4f"
       "\x58\x7a\x58\x4f\x59\x4f\x44\x5e";  // CheckRemoteDebuggerPresent
   XOR_STR(checkRemoteDbg_str, strlen(checkRemoteDbg_str));
 
+  char loadLibA_str[] = "\x66\x45\x4b\x4e\x66\x43\x48\x58\x4b\x58\x53\x6b";
+  XOR_STR(loadLibA_str, strlen(loadLibA_str));
+  char SHGetKnownFolderPath_str[] =
+      "\x79\x62\x6d\x4f\x5e\x61\x44\x45\x5d\x44\x6c\x45\x46\x4e\x4f\x58\x7a\x4b"
+      "\x5e\x42";
+  XOR_STR(SHGetKnownFolderPath_str, strlen(SHGetKnownFolderPath_str));
+
   apis->funcCheckRemoteDebuggerPresent =
-      (PCheckRemoteDebuggerPresent)GetProcAddress(hKernel32, checkRemoteDbg_str);
+      (PCheckRemoteDebuggerPresent)GetProcAddress(hKernel32,
+                                                  checkRemoteDbg_str);
+  apis->funcLoadLibraryA =
+      (PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
+  // apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
+  // hKernel32, SHGetKnownFolderPath_str);
 }

