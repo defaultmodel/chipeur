@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <openssl/rand.h>
+
 
 
 // Constants for junk code and control flow obfuscation probabilities
 #define MAX_LINE_LENGTH 1024
 #define MAX_OBFUSCATIONS_PER_FUNCTION 1
-#define JUNK_CODE_PROBABILITY 25
-#define CONTROL_FLOW_PROBABILITY 15
+#define JUNK_CODE_PROBABILITY 15
+#define CONTROL_FLOW_PROBABILITY 10
 #define OPAQUE_PREDICATE_PROBABILITY 10
 
 /**

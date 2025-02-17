@@ -1,4 +1,4 @@
-// gcc -o junk_code_inserter src/junk_code_inserter.c -lcrypto 
+// gcc -o junk_code_inserter src/junk_code_inserter.c -Iinclude    -->   ./build.sh
 #include "junk_code_inserter.h"
 
 void generate_junk_code(FILE *output) {
@@ -165,9 +165,6 @@ void insert_obfuscation(const char *file_path) {
     int obfuscations_in_function = 0;
     int inside_struct = 0;
 
-    unsigned int seed;
-    RAND_bytes((unsigned char*)&seed, sizeof(seed));
-    srand(seed);
 
     while (fgets(line, sizeof(line), input)) {
         if (strstr(line, "struct ") || strstr(line, "typedef struct")) {
