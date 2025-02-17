@@ -1,5 +1,6 @@
 #include <windows.h>
 
+// duration is in miliseconds
 // sleep the program to evade sandbox time limit and check if uptime is
 // consistent between the before and after sleep (to detect fast-forwards)
 int delay_execution(int duration) {
