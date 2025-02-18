@@ -5,7 +5,7 @@
 // Generates random junk code to obfuscate the source code.
 void generate_junk_code(FILE *output) {
   unsigned int rand_value;
-  rand_value = rand() % 5; // Selects a random junk code pattern
+  rand_value = rand() % 5;  // Selects a random junk code pattern
 
   switch (rand_value) {
     case 0: {
@@ -30,7 +30,8 @@ void generate_junk_code(FILE *output) {
     }
 
     case 1: {
-      // Allocates a small array, fills it with random values, modifies one element, and frees it
+      // Allocates a small array, fills it with random values, modifies one
+      // element, and frees it
       int array_id = rand() % 1000;
       int array_size = 2 + (rand() % 3);
       fprintf(
@@ -53,7 +54,8 @@ void generate_junk_code(FILE *output) {
     }
 
     case 2: {
-      // Creates a small heap allocation, fills it with random values, performs some calculations, and frees it
+      // Creates a small heap allocation, fills it with random values, performs
+      // some calculations, and frees it
       int ptr_id = rand() % 1000;
       fprintf(
           output,
@@ -120,11 +122,12 @@ void generate_junk_code(FILE *output) {
 // Generates random control flow obfuscation to make reverse engineering harder.
 void generate_control_flow(FILE *output) {
   unsigned int rand_value;
-  rand_value = rand() % 5; // Selects a random control flow obfuscation pattern
+  rand_value = rand() % 5;  // Selects a random control flow obfuscation pattern
 
   switch (rand_value) {
     case 0: {
-      // Creates a volatile control state variable and modifies it based on bitwise conditions
+      // Creates a volatile control state variable and modifies it based on
+      // bitwise conditions
       int var_id = rand() % 1000;
       fprintf(output,
               "    volatile int control_state_%d = rand() ^ (rand() << 16);\n",
@@ -140,7 +143,8 @@ void generate_control_flow(FILE *output) {
     }
 
     case 1: {
-      // Declares a small buffer and modifies its contents based on random values
+      // Declares a small buffer and modifies its contents based on random
+      // values
       int buffer_id = rand() % 1000;
       fprintf(output, "    volatile int buffer_control_%d[3];\n", buffer_id);
       fprintf(output, "    for (int i = 0; i < 3; i++) {\n");
@@ -226,9 +230,10 @@ void insert_obfuscation(const char *file_path) {
   }
 
   char line[MAX_LINE_LENGTH];
-  int inside_function = 0; // Flag to track if we are inside a function
-  int obfuscations_in_function = 0;  // Counter to limit obfuscations per function
-  int inside_struct = 0; // Flag to track if we are inside a struct definition
+  int inside_function = 0;  // Flag to track if we are inside a function
+  int obfuscations_in_function =
+      0;                  // Counter to limit obfuscations per function
+  int inside_struct = 0;  // Flag to track if we are inside a struct definition
 
   // Process the input file line by line
   while (fgets(line, sizeof(line), input)) {
@@ -239,14 +244,17 @@ void insert_obfuscation(const char *file_path) {
     if (strstr(line, "};") && inside_struct) {
       inside_struct = 0;
     }
-    // Detect function start by encountering an opening brace '{' outside of a struct
+    // Detect function start by encountering an opening brace '{' outside of a
+    // struct
     if (strstr(line, "{") && !inside_struct) {
       inside_function = 1;
-      obfuscations_in_function = 0; // Reset obfuscation counter for new function
+      obfuscations_in_function =
+          0;  // Reset obfuscation counter for new function
     }
-     // Detect function end by encountering a closing brace '}' outside of a struct
+    // Detect function end by encountering a closing brace '}' outside of a
+    // struct
     if (strstr(line, "}") && !inside_struct) {
-      inside_function = 0; 
+      inside_function = 0;
     }
 
     // Insert junk code before return statements if inside a function
@@ -261,7 +269,8 @@ void insert_obfuscation(const char *file_path) {
     // Write the current line to the output file
     fputs(line, output);
 
-    // Insert obfuscation after semicolon if inside a function and not a return statement
+    // Insert obfuscation after semicolon if inside a function and not a return
+    // statement
     if (inside_function && strstr(line, ";") && !strstr(line, "return") &&
         obfuscations_in_function < MAX_OBFUSCATIONS_PER_FUNCTION) {
       // Randomly insert junk code
