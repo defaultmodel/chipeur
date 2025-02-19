@@ -3,6 +3,8 @@
 
 #include <windef.h>
 
+#define CRED_SIZE 32
+
 // Encrypted credentials
 typedef struct {
   PSTR url;
@@ -12,7 +14,6 @@ typedef struct {
 } Login;
 
 // Decrypted `Login`
-// mostly used for debug/printing purposes
 typedef struct {
   PSTR url;
   PSTR username;

