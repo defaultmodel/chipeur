@@ -5,7 +5,7 @@
 // Generates random junk code to obfuscate the source code.
 void generate_junk_code(FILE *output) {
   unsigned int rand_value;
-  rand_value = rand() % 5;  // Selects a random junk code pattern
+  rand_value = rand() % 4;  // Selects a random junk code pattern
 
   switch (rand_value) {
     case 0: {
@@ -54,50 +54,24 @@ void generate_junk_code(FILE *output) {
     }
 
     case 2: {
-      // Creates a small heap allocation, fills it with random values, performs
-      // some calculations, and frees it
-      int ptr_id = rand() % 1000;
-      fprintf(
-          output,
-          "    volatile int* heap_var_%d = (int*)malloc(sizeof(int) * 3);\n",
-          ptr_id);
-      fprintf(output, "    if (heap_var_%d) {\n", ptr_id);
-      fprintf(output, "        for (int i = 0; i < 3; i++) {\n");
-      fprintf(output, "            heap_var_%d[i] = (rand() << 16) | rand();\n",
-              ptr_id);
-      fprintf(output, "        }\n");
-      fprintf(output,
-              "        heap_var_%d[1] ^= heap_var_%d[2] * heap_var_%d[0];\n",
-              ptr_id, ptr_id, ptr_id);
-      fprintf(output, "        free((void*)heap_var_%d);\n", ptr_id);
+      // Introduces a buffer on the stack and performs redundant operations
+      int buffer_id = rand() % 1000;
+      fprintf(output, "    volatile int buffer_%d[5];\n", buffer_id);
+      fprintf(output, "    for (int i = 0; i < 5; i++) {\n");
+      fprintf(output, "        buffer_%d[i] = (rand() << 8) | rand();\n",
+              buffer_id);
+      fprintf(output, "    }\n");
+      fprintf(output, "    buffer_%d[3] ^= buffer_%d[1] * buffer_%d[4];\n",
+              buffer_id, buffer_id, buffer_id);
+      fprintf(output, "    if (buffer_%d[2] & 0xF0F0F0F0) {\n", buffer_id);
+      fprintf(output, "        buffer_%d[0] += rand();\n", buffer_id);
+      fprintf(output, "    } else {\n");
+      fprintf(output, "        buffer_%d[0] -= rand() %% 256;\n", buffer_id);
       fprintf(output, "    }\n");
       break;
     }
 
     case 3: {
-      // Introduces a control flow variable with bitwise operations and loops
-      int logic_id = rand() % 1000;
-      fprintf(output,
-              "    volatile int control_flow_%d = rand() ^ (rand() << 16);\n",
-              logic_id);
-      fprintf(output,
-              "    for (int i = (control_flow_%d & 0x3); i > 0; i--) {\n",
-              logic_id);
-      fprintf(output,
-              "        control_flow_%d ^= (i * control_flow_%d) | (rand() %% "
-              "0xFFFF);\n",
-              logic_id, logic_id);
-      fprintf(output, "    }\n");
-      fprintf(output, "    if ((control_flow_%d & 0x80000000)) {\n", logic_id);
-      fprintf(output, "        control_flow_%d += rand();\n", logic_id);
-      fprintf(output, "    } else {\n");
-      fprintf(output, "        control_flow_%d -= (rand() %% 0x3FF);\n",
-              logic_id);
-      fprintf(output, "    }\n");
-      break;
-    }
-
-    case 4: {
       // Generates a random seed and modifies it within a loop
       int loop_id = rand() % 1000;
       fprintf(output, "    volatile int seed_%d = (rand() << 16) | rand();\n",
@@ -122,7 +96,7 @@ void generate_junk_code(FILE *output) {
 // Generates random control flow obfuscation to make reverse engineering harder.
 void generate_control_flow(FILE *output) {
   unsigned int rand_value;
-  rand_value = rand() % 5;  // Selects a random control flow obfuscation pattern
+  rand_value = rand() % 6;  // Selects a random control flow obfuscation pattern
 
   switch (rand_value) {
     case 0: {
@@ -214,6 +188,33 @@ void generate_control_flow(FILE *output) {
       fprintf(output, "    alt_var_%d += (rand() %% 30);\n", label_id);
       fprintf(output, "end_%d:\n", label_id);
     } break;
+
+    case 5: {
+      // Introduces an unnecessary switch/case structure with no real effect
+      int switch_id = rand() % 1000;
+      fprintf(output, "    volatile int switch_var_%d = rand() %% 5;\n",
+              switch_id);
+      fprintf(output, "    switch (switch_var_%d) {\n", switch_id);
+      fprintf(output, "        case 0:\n");
+      fprintf(output, "            switch_var_%d += rand() %% 10;\n",
+              switch_id);
+      fprintf(output, "            break;\n");
+      fprintf(output, "        case 1:\n");
+      fprintf(output, "            switch_var_%d -= rand() %% 5;\n", switch_id);
+      fprintf(output, "            break;\n");
+      fprintf(output, "        case 2:\n");
+      fprintf(output, "            switch_var_%d ^= (rand() << 2);\n",
+              switch_id);
+      fprintf(output, "            break;\n");
+      fprintf(output, "        default:\n");
+      fprintf(output,
+              "            switch_var_%d = (switch_var_%d & 0xF) | (rand() %% "
+              "3);\n",
+              switch_id, switch_id);
+      fprintf(output, "            break;\n");
+      fprintf(output, "    }\n");
+      break;
+    }
   }
 }
 
