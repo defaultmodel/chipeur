@@ -5,7 +5,6 @@
 #include <string.h>
 #include <wchar.h>
 #include <windows.h>
-
 #include <winnt.h>
 #include <winsock2.h>
 
@@ -40,14 +39,13 @@ int main(void) {
         while (1);
       } else {
 #ifdef DEBUG
-      printf("Debug program detected on the process.\n");
+        printf("Debug program detected on the process.\n");
 #endif
       }
     } else {
 #ifdef DEBUG
-      printf(
-          "Error on CheckRemoteDebuggerPresent call. Error code : %lu\n",
-          GetLastError());
+      printf("Error on CheckRemoteDebuggerPresent call. Error code : %lu\n",
+             GetLastError());
 #endif
     }
   } else {
