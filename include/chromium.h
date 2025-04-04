@@ -3,8 +3,9 @@
 
 #include <windows.h>
 #include <winnt.h>
-#include "obfuscation.h"
+
 #include "logins.h"
+#include "obfuscation.h"
 
 #define MAX_BROWSER_NAME_SIZE 20
 #define MAX_LOGIN_DATA_PATH_SIZE 57
