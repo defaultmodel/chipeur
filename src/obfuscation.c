@@ -9,12 +9,12 @@
  * @param str : the string to obfuscate/deobfuscate by xoring each character
  * @param size : size of given string
  */
-void xor_str(char *str, int size) {
+/*void xor_str(char *str, int size) {
   while (size-- > 0) {
     *str ^= 42;
     str++;
   }
-}
+}*/
 
 /**
  * XOR the given wide string pointer by xoring each wide char with 42
@@ -22,7 +22,7 @@ void xor_str(char *str, int size) {
  * character
  * @param size : size of given string
  */
-void xor_wstr(wchar_t *wstr, int size) {
+/*void xor_wstr(wchar_t *wstr, int size) {
   while (size-- > 0) {
     *wstr++ ^= 42;
   }
@@ -76,8 +76,8 @@ char SHGetKnownFolderPath_str[] =
     "\x79\x62\x6d\x4f\x5e\x61\x44\x45\x5d\x44\x6c\x45\x46\x4e\x4f\x58\x7a\x4b"
     "\x5e\x42";
 XOR_STR(SHGetKnownFolderPath_str, strlen(SHGetKnownFolderPath_str));*/
-  // apis->funcLoadLibraryA =
-  //(PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
-  // apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
-  // hKernel32, SHGetKnownFolderPath_str);
+// apis->funcLoadLibraryA =
+//(PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
+// apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
+// hKernel32, SHGetKnownFolderPath_str);
 }
