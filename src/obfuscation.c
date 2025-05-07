@@ -76,8 +76,8 @@ char SHGetKnownFolderPath_str[] =
     "\x79\x62\x6d\x4f\x5e\x61\x44\x45\x5d\x44\x6c\x45\x46\x4e\x4f\x58\x7a\x4b"
     "\x5e\x42";
 XOR_STR(SHGetKnownFolderPath_str, strlen(SHGetKnownFolderPath_str));*/
-  // apis->funcLoadLibraryA =
-  //(PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
-  // apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
-  // hKernel32, SHGetKnownFolderPath_str);
+// apis->funcLoadLibraryA =
+//(PLoadLibraryA)GetProcAddress(hKernel32, loadLibA_str);
+// apis->funcSHGetKnownFolderPath = (PSHGetKnownFolderPath)GetProcAddress(
+// hKernel32, SHGetKnownFolderPath_str);
 }
