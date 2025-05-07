@@ -9,12 +9,12 @@
  * @param str : the string to obfuscate/deobfuscate by xoring each character
  * @param size : size of given string
  */
-void xor_str(char *str, int size) {
+/*void xor_str(char *str, int size) {
   while (size-- > 0) {
     *str ^= 42;
     str++;
   }
-}
+}*/
 
 /**
  * XOR the given wide string pointer by xoring each wide char with 42
@@ -22,7 +22,7 @@ void xor_str(char *str, int size) {
  * character
  * @param size : size of given string
  */
-void xor_wstr(wchar_t *wstr, int size) {
+/*void xor_wstr(wchar_t *wstr, int size) {
   while (size-- > 0) {
     *wstr++ ^= 42;
   }
