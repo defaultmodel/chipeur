@@ -17,7 +17,9 @@ int concat_paths(PCWSTR leftPath, PCWSTR rightPath, PWSTR* fullPathOut) {
   size_t totalLength = wcslen(leftPath) + wcslen(rightPath) + 1;
   *fullPathOut = (PWSTR)malloc(totalLength * sizeof(wchar_t));
   if (!*fullPathOut) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to allocate memory for concatenated path\n");
+#endif
     return EXIT_FAILURE;
   }
 
@@ -34,7 +36,9 @@ int get_logindata_path(PCWSTR loginDataSubPath, PWSTR* loginDataPathOut) {
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
   if (FAILED(hr)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+#endif
     return EXIT_FAILURE;
   }
 
@@ -57,7 +61,9 @@ int get_localstate_path(PCWSTR localStateSubPath, PWSTR* localStatePathOut) {
   HRESULT hr =
       SHGetKnownFolderPath(&FOLDERID_LocalAppData, 0, NULL, &appdataPath);
   if (FAILED(hr)) {
+#ifdef DEBUG
     fprintf(stderr, "Failed to retrieve APPDATA path. Error code: %08lX\n", hr);
+#endif
     return EXIT_FAILURE;
   }
 
